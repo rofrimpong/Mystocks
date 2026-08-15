@@ -514,3 +514,20 @@ Foundation COMPLETED. Sales POS screen and remaining modules can be filled itera
 
 ### Status
 Sales POS COMPLETED.
+
+## Phase 14c – Inventory Screen
+
+### Files
+- frontend/src/services/inventory.ts
+- frontend/src/pages/InventoryPage.tsx
+- frontend/src/App.tsx (updated)
+
+### Features
+- List inventory balances with search
+- Low-stock filter + badge
+- Adjust stock (in/out) with required reason
+- Record opening stock
+- Online API + offline queue fallback
+
+### Status
+Inventory UI COMPLETED.
