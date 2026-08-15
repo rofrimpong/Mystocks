@@ -133,3 +133,13 @@ Proprietary – CNMG Technologies. All rights reserved.
 
 **CNMG Technologies**  
 MyStocks – Reliable inventory & business management for African traders.
+
+## Production deployment (cPanel / your domain)
+
+See **docs/DEPLOYMENT.md** for full steps and **docs/DEPLOY_CHECKLIST.md** for a tick-list.
+
+Key points:
+1. Document Root → `backend/public` only
+2. PHP 8.2 or 8.3
+3. Configure `.env`, run Composer + migrations
+4. Build frontend with `VITE_API_URL=https://yourdomain.com/api/v1` and upload assets

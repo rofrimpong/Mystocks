@@ -611,3 +611,14 @@ Reports UI COMPLETED. Core PWA trader workflows are covered.
 
 ### Status
 Settings UI COMPLETED. Core PWA screens are complete.
+
+## Phase 18 – Production Deployment Package
+
+### Files
+- docs/DEPLOYMENT.md (full cPanel guide)
+- docs/DEPLOY_CHECKLIST.md
+- frontend/.env.production.example
+- README.md (updated)
+
+### Status
+COMPLETED – Ready to host on your domain following the guide.

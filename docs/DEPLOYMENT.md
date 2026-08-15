@@ -1,159 +1,210 @@
-# MyStocks Production Deployment (cPanel / Shared Hosting Friendly)
+# MyStocks — Production Deployment Guide (cPanel / Domain)
 
-MyStocks is intentionally structured so the Laravel application itself is **never** exposed as the web root.
-
----
-
-## Recommended Structure on Server
-
-```
-/home/username/
-└── mystocks/                    # or public_html/mystocks
-    ├── backend/                 # Full Laravel app
-    │   ├── app/
-    │   ├── bootstrap/
-    │   ├── config/
-    │   ├── database/
-    │   ├── public/              # ← Point domain Document Root here
-    │   ├── routes/
-    │   ├── storage/
-    │   ├── vendor/
-    │   └── .env
-    ├── frontend/                # Source (optional after build)
-    └── docs/
-```
-
-**Critical rule:** The domain’s Document Root must point **only** to `backend/public`.
+This guide is for hosting MyStocks on typical cPanel shared hosting or a VPS, with clear steps for PHP version, document root, and going live on your domain.
 
 ---
 
-## Step-by-step cPanel Deployment
+## 1. Requirements
 
-### 1. Upload Files
-- Upload the entire `mystocks` folder via File Manager or Git/SSH.
-- Or upload a release zip and extract it.
+| Item | Notes |
+|------|--------|
+| Domain / subdomain | e.g. mystocks.yourdomain.com |
+| cPanel | File Manager + Terminal/SSH if possible |
+| PHP 8.2 or 8.3 | MultiPHP Manager |
+| MySQL 8 / MariaDB | Default on cPanel (PostgreSQL optional) |
+| Composer 2.x | On server or run locally and upload vendor |
+| Node 20+ | Only to build frontend (can be on your PC) |
 
-### 2. Set Document Root
-In cPanel → Domains / Subdomains:
-- Set the document root of your domain (or subdomain) to:
-  ```
-  /home/username/mystocks/backend/public
-  ```
+**Rule:** Document Root must be **only**:
 
-### 3. PHP Version
-- Go to **Select PHP Version** (or MultiPHP Manager)
-- Choose **PHP 8.2** or **8.3**
-- Enable required extensions: bcmath, curl, gd, intl, mbstring, pdo, pgsql (or mysqlnd), xml, zip, opcache
+```text
+/home/USERNAME/mystocks/backend/public
+```
 
-### 4. Create Database
-- Create a PostgreSQL database (preferred) or MySQL database
-- Create a user and assign full privileges
-- Note the host, database name, username, password
+---
 
-### 5. Configure Environment
+## 2. Folder layout
+
+```text
+/home/USERNAME/mystocks/
+├── backend/                 # Laravel
+│   ├── public/              # ← Document Root
+│   ├── storage/
+│   ├── vendor/
+│   └── .env
+├── frontend/                # source; build output goes into backend/public
+└── docs/
+```
+
+---
+
+## 3. Deploy steps
+
+### 3.1 Upload code
+
+Git:
+
+```bash
+cd ~
+git clone YOUR_REPO mystocks
+cd mystocks
+```
+
+Or upload ZIP via File Manager and extract (exclude node_modules).
+
+### 3.2 Document Root
+
+cPanel → Domains → set Document Root to:
+
+```text
+/home/USERNAME/mystocks/backend/public
+```
+
+### 3.3 PHP version
+
+MultiPHP Manager → **8.2 or 8.3** for this domain.  
+Enable: bcmath, curl, gd, intl, mbstring, openssl, pdo, pdo_mysql, tokenizer, xml, zip, opcache.
+
+### 3.4 Database
+
+Create MySQL database + user + ALL PRIVILEGES. Host is usually `localhost`.
+
+### 3.5 Environment
+
 ```bash
 cd ~/mystocks/backend
 cp .env.example .env
-nano .env   # or use File Manager editor
 ```
 
-Set at minimum:
-```
+Edit `.env`:
+
+```env
+APP_NAME="MyStocks"
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://yourdomain.com
-APP_KEY=   # generate with artisan
-DB_CONNECTION=pgsql   # or mysql
-DB_HOST=...
-DB_DATABASE=...
-DB_USERNAME=...
-DB_PASSWORD=...
+APP_TIMEZONE=Africa/Accra
+
+DB_CONNECTION=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_DATABASE=username_mystocks
+DB_USERNAME=username_dbuser
+DB_PASSWORD=strong_password
+
+SESSION_DRIVER=database
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+
 FRONTEND_URL=https://yourdomain.com
+SANCTUM_STATEFUL_DOMAINS=yourdomain.com,www.yourdomain.com
+
+MYSTOCKS_DEFAULT_CURRENCY=GHS
+MYSTOCKS_DEFAULT_COUNTRY=GH
+MYSTOCKS_DEFAULT_TIMEZONE=Africa/Accra
 ```
 
-Generate key:
 ```bash
 php artisan key:generate
 ```
 
-### 6. Install Dependencies (SSH recommended)
+### 3.6 Composer
+
 ```bash
 cd ~/mystocks/backend
 composer install --no-dev --optimize-autoloader
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan migrate --force
+# if needed:
+COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader
 ```
 
-If you do not have SSH, use cPanel Terminal if available, or contact support to run Composer.
+### 3.7 Migrate & storage
 
-### 7. Storage Link & Permissions
 ```bash
+php artisan migrate --force
 php artisan storage:link
 chmod -R 775 storage bootstrap/cache
 ```
 
-### 8. Frontend Build
-On your local machine (or CI):
+### 3.8 Frontend build (on your computer)
+
 ```bash
 cd frontend
+# create .env.production
+echo 'VITE_API_URL=https://yourdomain.com/api/v1' > .env.production
 npm ci
 npm run build
 ```
 
-Copy the contents of `frontend/dist/` into `backend/public/` (or a dedicated assets folder and adjust Vite base).
+Copy `frontend/dist/*` into `backend/public/` (keep Laravel `index.php` and `.htaccess`).
 
-Alternatively serve the frontend from a subdomain and point API calls to the backend domain.
+### 3.9 Production caches
 
-### 9. Cron Jobs (Scheduler)
-In cPanel → Cron Jobs add:
+```bash
+cd ~/mystocks/backend
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
 ```
-* * * * * cd /home/username/mystocks/backend && php artisan schedule:run >> /dev/null 2>&1
+
+### 3.10 Cron
+
+```text
+* * * * * cd /home/USERNAME/mystocks/backend && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-### 10. Queue Worker (optional but recommended)
-If Redis or database queues are used, run a worker via Supervisor or a long-running cron. For simple shared hosting, database queue + the scheduler is acceptable for V1.
+### 3.11 SSL
+
+Enable AutoSSL / Force HTTPS in cPanel.
 
 ---
 
-## Security Checklist for Production
+## 4. Go-live checks
 
-- [ ] `APP_DEBUG=false`
-- [ ] Strong `APP_KEY`
-- [ ] Document root is **only** `public/`
-- [ ] `.env` is not web-accessible
-- [ ] HTTPS enabled (Force HTTPS redirect)
-- [ ] Database user has minimal required privileges
-- [ ] File permissions: storage and bootstrap/cache writable by web user
-- [ ] Rate limiting enabled (Laravel default + custom)
-- [ ] CORS restricted to your frontend domain
+- [ ] https://yourdomain.com/api/v1/health → `{"status":"ok",...}`
+- [ ] Register works
+- [ ] Login works
+- [ ] Dashboard loads
+- [ ] Create product + opening stock + sale
+- [ ] APP_DEBUG=false
+- [ ] Document root is backend/public only
 
 ---
 
-## Updating the Application
+## 5. Common fixes
 
-1. Put the site in maintenance mode: `php artisan down`
-2. Pull/upload new code
-3. `composer install --no-dev --optimize-autoloader`
-4. `php artisan migrate --force`
-5. Rebuild frontend assets if needed
-6. Clear & recache config/routes/views
-7. `php artisan up`
-
----
-
-## Troubleshooting Common Issues
-
-| Problem | Solution |
-|---------|----------|
-| 500 error after deploy | Check `storage/logs/laravel.log`. Usually permissions or missing APP_KEY |
-| Composer memory limit | `COMPOSER_MEMORY_LIMIT=-1 composer install ...` |
-| PHP version wrong | Change in MultiPHP Manager and re-run composer |
-| Database connection refused | Verify host (often `localhost` or a specific socket on shared hosts) |
-| Assets 404 | Confirm frontend build was copied and Vite base path is correct |
+| Issue | Fix |
+|-------|-----|
+| 500 error | storage/logs/laravel.log; APP_KEY; DB; permissions |
+| No encryption key | php artisan key:generate |
+| Composer OOM | COMPOSER_MEMORY_LIMIT=-1 |
+| Wrong PHP | MultiPHP → 8.2/8.3 |
+| API 404 | Document root + .htaccess |
+| CORS | SANCTUM_STATEFUL_DOMAINS + FRONTEND_URL |
+| Blank UI | Rebuild with VITE_API_URL; upload assets |
 
 ---
 
-**CNMG Technologies**  
-MyStocks is built to run reliably on typical African shared hosting environments while remaining secure and maintainable.
+## 6. Updates
+
+```bash
+cd ~/mystocks && git pull
+cd backend
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+php artisan config:cache && php artisan route:cache && php artisan view:cache
+# rebuild frontend and upload dist
+```
+
+---
+
+## 7. Security
+
+- APP_DEBUG=false
+- Strong DB password
+- Document root = public only
+- HTTPS on
+- Never commit .env
+
+---
+
+**MyStocks · CNMG Technologies · Ghana (GHS)**
