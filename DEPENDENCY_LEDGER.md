@@ -16,7 +16,7 @@
 | 4     | Tenant / Business / Branches    | COMPLETED   | Business + Branch CRUD, tenant middleware  |
 | 5     | Products & Categories           | COMPLETED   | Full CRUD, tenant-scoped, validation       |
 | 6     | Inventory Engine                | COMPLETED   | Service + balances + movements + adjust    |
-| 7     | Purchases                       | PENDING     |                                            |
+| 7     | Purchases                       | COMPLETED   | Create purchase + inventory increase       |
 | 8     | Sales                           | PENDING     |                                            |
 | 9     | Customers & Suppliers           | PENDING     |                                            |
 | 10    | Expenses & Profit Engine        | PENDING     |                                            |
@@ -284,3 +284,35 @@ POST /api/v1/inventory/adjust
 
 ### Status
 COMPLETED – Ready for Phase 7 (Purchases).
+
+## Phase 7 – Purchases
+
+### Files Created
+- app/Models/Purchase.php
+- app/Models/PurchaseItem.php
+- app/Models/PurchasePayment.php
+- app/Models/Supplier.php
+- app/Services/PurchaseService.php
+- app/Http/Controllers/Api/V1/PurchaseController.php
+- app/Http/Requests/Purchase/StorePurchaseRequest.php
+- app/Http/Resources/PurchaseResource.php
+- routes/api.php (updated)
+
+### Endpoints
+GET  /api/v1/purchases
+POST /api/v1/purchases
+GET  /api/v1/purchases/{id}
+
+### Behaviour
+- Full DB transaction
+- Creates purchase + items
+- Increases inventory via InventoryService (type=purchase)
+- Records historical unit_cost on each line
+- Updates product.buying_price to latest cost
+- Optional payment at creation
+- Idempotency key support
+- Auto-generated purchase numbers
+- Tenant + branch scoped
+
+### Status
+COMPLETED – Ready for Phase 8 (Sales).

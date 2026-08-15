@@ -74,6 +74,16 @@ class Business extends Model
         return $this->hasMany(Sale::class);
     }
 
+    public function purchases(): HasMany
+    {
+        return $this->hasMany(Purchase::class);
+    }
+
+    public function suppliers(): HasMany
+    {
+        return $this->hasMany(Supplier::class);
+    }
+
     public function isActive(): bool
     {
         return in_array($this->status, ['active', 'trial'], true);
