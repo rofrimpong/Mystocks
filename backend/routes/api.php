@@ -101,5 +101,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Reports / Profit
         Route::get('/reports/profit', [ReportController::class, 'profitSummary']);
         Route::get('/reports/dashboard', [ReportController::class, 'dashboard']);
+        Route::get('/reports/best-sellers', [ReportController::class, 'bestSellers']);
+        Route::get('/reports/low-stock', [ReportController::class, 'lowStock']);
+        Route::get('/reports/inventory-valuation', [ReportController::class, 'inventoryValuation']);
+        Route::get('/reports/sales-by-day', [ReportController::class, 'salesByDay']);
     });
 });

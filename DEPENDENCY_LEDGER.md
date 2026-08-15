@@ -417,3 +417,22 @@ GET /api/v1/reports/dashboard
 
 ### Status
 COMPLETED – Ready for Phase 11 (Reports expansion) or Phase 12/13 (Notifications / Offline).
+
+## Phase 11 – Expanded Reports
+
+### Files Updated
+- app/Http/Controllers/Api/V1/ReportController.php (expanded)
+- routes/api.php
+
+### New Endpoints
+GET /api/v1/reports/best-sellers
+GET /api/v1/reports/low-stock
+GET /api/v1/reports/inventory-valuation
+GET /api/v1/reports/sales-by-day
+
+### Existing
+GET /api/v1/reports/profit
+GET /api/v1/reports/dashboard  (now includes stock value + low-stock count)
+
+### Status
+COMPLETED – Ready for Phase 12 (Notifications) or Phase 13 (Offline Sync) or Phase 14 (PWA).
