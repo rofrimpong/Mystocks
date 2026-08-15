@@ -546,3 +546,18 @@ Inventory UI COMPLETED.
 
 ### Status
 Customers UI COMPLETED.
+
+## Phase 14e – Suppliers Screen
+
+### Files
+- frontend/src/services/suppliers.ts
+- frontend/src/pages/SuppliersPage.tsx
+- frontend/src/App.tsx (updated)
+
+### Features
+- List suppliers with search
+- Outstanding balance (payable) display
+- Add supplier modal
+
+### Status
+Suppliers UI COMPLETED.
