@@ -1,0 +1,43 @@
+# Environment
+.env
+.env.backup
+.env.production
+.env.local
+*.env
+
+# Dependencies
+/backend/vendor/
+/frontend/node_modules/
+/backend/node_modules/
+
+# Build / Cache
+/backend/bootstrap/cache/*.php
+/backend/storage/*.key
+/backend/storage/framework/cache/*
+/backend/storage/framework/sessions/*
+/backend/storage/framework/views/*
+/backend/storage/logs/*
+/backend/public/hot
+/backend/public/storage
+/frontend/dist/
+/frontend/build/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Testing
+.phpunit.result.cache
+/backend/coverage/
+/frontend/coverage/
+
+# Misc
+*.log
+npm-debug.log*
+yarn-error.log*
+composer.phar
+/backend/.phpunit.cache
