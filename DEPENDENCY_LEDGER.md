@@ -465,3 +465,33 @@ GET  /api/v1/sync/status   – Query previous sync results
 
 ### Status
 COMPLETED – Ready for Phase 14 (React PWA Frontend).
+
+## Phase 14 – React PWA Frontend (Foundation)
+
+### Files Created
+- src/types/index.ts
+- src/services/api.ts
+- src/services/auth.ts
+- src/stores/authStore.ts
+- src/stores/offlineStore.ts
+- src/layouts/AppLayout.tsx
+- src/pages/LoginPage.tsx
+- src/pages/RegisterPage.tsx
+- src/pages/DashboardPage.tsx
+- src/pages/ProductsPage.tsx
+- src/pages/PlaceholderPage.tsx
+- src/App.tsx (routing)
+
+### Features
+- Login / Register flows
+- Protected routes
+- Mobile-first layout with bottom nav + desktop sidebar
+- Online/Offline indicator
+- Offline queue + sync button
+- Dashboard with live stats
+- Products list with search
+- Token + X-Business-Id headers on every API call
+- PWA config already present in vite.config.ts
+
+### Status
+Foundation COMPLETED. Sales POS screen and remaining modules can be filled iteratively.

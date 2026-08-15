@@ -1,37 +1,60 @@
-import { Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { useAuthStore } from './stores/authStore';
+import AppLayout from './layouts/AppLayout';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import DashboardPage from './pages/DashboardPage';
+import ProductsPage from './pages/ProductsPage';
+import PlaceholderPage from './pages/PlaceholderPage';
 
-function App() {
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <div className="flex min-h-screen flex-col items-center justify-center p-6">
-              <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
-                <div className="mb-6 text-center">
-                  <h1 className="text-3xl font-bold tracking-tight text-teal-700">
-                    MyStocks
-                  </h1>
-                  <p className="mt-2 text-sm text-slate-500">
-                    by CNMG Technologies
-                  </p>
-                </div>
-                <p className="text-center text-slate-600">
-                  Production foundation is being built.
-                  <br />
-                  Phase 1 complete. Authentication &amp; core modules coming next.
-                </p>
-                <div className="mt-8 rounded-lg bg-teal-50 p-4 text-center text-sm text-teal-800">
-                  Offline-capable • Multi-tenant • Ghana-first
-                </div>
-              </div>
-            </div>
-          }
-        />
-      </Routes>
-    </div>
-  );
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading, loadFromStorage } = useAuthStore();
+
+  useEffect(() => {
+    loadFromStorage();
+  }, [loadFromStorage]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-slate-500">
+        Loading…
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
 }
 
-export default App;
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
+      <Route
+        element={
+          <ProtectedRoute>
+            <AppLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<DashboardPage />} />
+        <Route path="sales" element={<PlaceholderPage title="Sales" />} />
+        <Route path="products" element={<ProductsPage />} />
+        <Route path="inventory" element={<PlaceholderPage title="Inventory" />} />
+        <Route path="customers" element={<PlaceholderPage title="Customers" />} />
+        <Route path="suppliers" element={<PlaceholderPage title="Suppliers" />} />
+        <Route path="expenses" element={<PlaceholderPage title="Expenses" />} />
+        <Route path="reports" element={<PlaceholderPage title="Reports" />} />
+        <Route path="settings" element={<PlaceholderPage title="Settings" />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
