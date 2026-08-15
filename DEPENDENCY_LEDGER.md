@@ -495,3 +495,22 @@ COMPLETED – Ready for Phase 14 (React PWA Frontend).
 
 ### Status
 Foundation COMPLETED. Sales POS screen and remaining modules can be filled iteratively.
+
+## Phase 14b – Sales POS Screen
+
+### Files
+- frontend/src/services/sales.ts
+- frontend/src/pages/SalesPage.tsx
+- frontend/src/App.tsx (updated)
+
+### Features
+- Product grid with search
+- Cart with qty +/- 
+- Payment methods: Cash, MoMo, Card, Credit
+- Online sale via API
+- Automatic offline queue when network fails or offline
+- Mobile cart drawer + desktop side panel
+- Large touch targets
+
+### Status
+Sales POS COMPLETED.

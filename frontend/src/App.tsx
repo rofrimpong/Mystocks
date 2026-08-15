@@ -7,6 +7,7 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProductsPage from './pages/ProductsPage';
 import PlaceholderPage from './pages/PlaceholderPage';
+import SalesPage from './pages/SalesPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, loadFromStorage } = useAuthStore();
@@ -44,7 +45,7 @@ export default function App() {
         }
       >
         <Route index element={<DashboardPage />} />
-        <Route path="sales" element={<PlaceholderPage title="Sales" />} />
+        <Route path="sales" element={<SalesPage />} />
         <Route path="products" element={<ProductsPage />} />
         <Route path="inventory" element={<PlaceholderPage title="Inventory" />} />
         <Route path="customers" element={<PlaceholderPage title="Customers" />} />
