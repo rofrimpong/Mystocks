@@ -12,7 +12,7 @@
 |-------|---------------------------------|-------------|--------------------------------------------|
 | 1     | Project Foundation              | COMPLETED   | Directory structure, configs, Git, docs    |
 | 2     | Database Schema                 | COMPLETED   | All core migrations + key models created   |
-| 3     | Authentication                  | PENDING     | Registration, login, password reset, OTP   |
+| 3     | Authentication                  | COMPLETED   | Register, login, logout, password reset    |
 | 4     | Tenant / Business / Branches    | PENDING     | Multi-tenancy core                         |
 | 5     | Products & Categories           | PENDING     |                                            |
 | 6     | Inventory Engine                | PENDING     | Balances + Movements ledger                |
@@ -144,3 +144,41 @@ cache, cache_locks, jobs, job_batches, failed_jobs
 
 ### Status
 COMPLETED – Schema ready. Models for core entities created. Ready for Phase 3 (Authentication).
+
+## Phase 3 – Authentication
+
+### Files Created
+- app/Http/Controllers/Api/V1/AuthController.php
+- app/Http/Controllers/Controller.php
+- app/Http/Requests/Auth/RegisterRequest.php
+- app/Http/Requests/Auth/LoginRequest.php
+- app/Http/Requests/Auth/ForgotPasswordRequest.php
+- app/Http/Requests/Auth/ResetPasswordRequest.php
+- app/Http/Resources/UserResource.php
+- app/Providers/AppServiceProvider.php
+- bootstrap/providers.php
+- config/auth.php
+- config/sanctum.php
+- routes/api.php (updated)
+
+### Endpoints
+POST   /api/v1/auth/register
+POST   /api/v1/auth/login
+POST   /api/v1/auth/forgot-password
+POST   /api/v1/auth/reset-password
+POST   /api/v1/auth/logout          (auth:sanctum)
+POST   /api/v1/auth/logout-all      (auth:sanctum)
+GET    /api/v1/auth/me              (auth:sanctum)
+
+### Features
+- Registration creates User + Business + Head Office Branch in a single transaction
+- 14-day trial on new businesses
+- Sanctum token authentication
+- Rate limiting on auth endpoints
+- Password reset via Laravel Password broker
+- Strong password defaults (mixed case, numbers, symbols, uncompromised)
+- Device name support for token management
+- Returns businesses list on login/me
+
+### Status
+COMPLETED – Ready for Phase 4 (Tenant / Business management enhancements).
