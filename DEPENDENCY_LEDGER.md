@@ -561,3 +561,19 @@ Customers UI COMPLETED.
 
 ### Status
 Suppliers UI COMPLETED.
+
+## Phase 14f – Expenses Screen
+
+### Files
+- frontend/src/services/expenses.ts
+- frontend/src/pages/ExpensesPage.tsx
+- frontend/src/App.tsx (updated)
+
+### Features
+- List expenses with category, date, payment method
+- Add expense with category (existing or new)
+- Payment method + date
+- Running total of listed expenses
+
+### Status
+Expenses UI COMPLETED.
