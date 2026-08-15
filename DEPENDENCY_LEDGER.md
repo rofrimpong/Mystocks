@@ -18,7 +18,7 @@
 | 6     | Inventory Engine                | COMPLETED   | Service + balances + movements + adjust    |
 | 7     | Purchases                       | COMPLETED   | Create purchase + inventory increase       |
 | 8     | Sales                           | COMPLETED   | Full transactional sales engine            |
-| 9     | Customers & Suppliers           | PENDING     |                                            |
+| 9     | Customers & Suppliers           | COMPLETED   | Full CRUD for customers and suppliers      |
 | 10    | Expenses & Profit Engine        | PENDING     |                                            |
 | 11    | Reports                         | PENDING     |                                            |
 | 12    | Notifications / Low Stock       | PENDING     |                                            |
@@ -349,3 +349,36 @@ GET  /api/v1/sales/{id}
 
 ### Status
 COMPLETED – Ready for Phase 9 (Customers & Suppliers).
+
+## Phase 9 – Customers & Suppliers
+
+### Files Created
+- app/Http/Controllers/Api/V1/CustomerController.php
+- app/Http/Controllers/Api/V1/SupplierController.php
+- app/Http/Requests/Customer/StoreCustomerRequest.php
+- app/Http/Requests/Customer/UpdateCustomerRequest.php
+- app/Http/Requests/Supplier/StoreSupplierRequest.php
+- app/Http/Requests/Supplier/UpdateSupplierRequest.php
+- app/Http/Resources/CustomerResource.php
+- app/Http/Resources/SupplierResource.php
+- routes/api.php (updated)
+
+### Endpoints
+Customers:
+GET/POST   /api/v1/customers
+GET/PUT/DELETE /api/v1/customers/{id}
+
+Suppliers:
+GET/POST   /api/v1/suppliers
+GET/PUT/DELETE /api/v1/suppliers/{id}
+
+### Features
+- Full tenant isolation
+- Search by name/phone/email
+- Filter active / with outstanding balance
+- Cannot delete if outstanding balance > 0
+- Credit limit support on customers
+- Soft deletes
+
+### Status
+COMPLETED – Ready for Phase 10 (Expenses & Profit).
