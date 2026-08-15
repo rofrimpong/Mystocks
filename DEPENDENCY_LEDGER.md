@@ -436,3 +436,32 @@ GET /api/v1/reports/dashboard  (now includes stock value + low-stock count)
 
 ### Status
 COMPLETED – Ready for Phase 12 (Notifications) or Phase 13 (Offline Sync) or Phase 14 (PWA).
+
+## Phase 13 – Offline Synchronization
+
+### Files Created
+- app/Models/IdempotencyKey.php
+- app/Models/SyncOperation.php
+- app/Services/SyncService.php
+- app/Http/Controllers/Api/V1/SyncController.php
+- app/Http/Requests/Sync/SyncBatchRequest.php
+- routes/api.php (updated)
+
+### Endpoints
+POST /api/v1/sync/push     – Push batch of offline operations
+GET  /api/v1/sync/status   – Query previous sync results
+
+### Supported offline operations
+- sale
+- inventory_adjustment
+- opening_stock
+
+### Guarantees
+- Idempotency keys prevent duplicate sales / movements
+- Each operation processed independently
+- Explicit conflict status returned (never silent overwrite)
+- Full audit via sync_operations + idempotency_keys tables
+- Safe for retries
+
+### Status
+COMPLETED – Ready for Phase 14 (React PWA Frontend).

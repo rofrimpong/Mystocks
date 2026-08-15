@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\PurchaseController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SaleController;
 use App\Http\Controllers\Api\V1\SupplierController;
+use App\Http\Controllers\Api\V1\SyncController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', function () {
@@ -105,5 +106,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/reports/low-stock', [ReportController::class, 'lowStock']);
         Route::get('/reports/inventory-valuation', [ReportController::class, 'inventoryValuation']);
         Route::get('/reports/sales-by-day', [ReportController::class, 'salesByDay']);
+
+        // Offline Sync
+        Route::post('/sync/push', [SyncController::class, 'push']);
+        Route::get('/sync/status', [SyncController::class, 'status']);
     });
 });
