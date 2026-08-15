@@ -17,7 +17,7 @@
 | 5     | Products & Categories           | COMPLETED   | Full CRUD, tenant-scoped, validation       |
 | 6     | Inventory Engine                | COMPLETED   | Service + balances + movements + adjust    |
 | 7     | Purchases                       | COMPLETED   | Create purchase + inventory increase       |
-| 8     | Sales                           | PENDING     |                                            |
+| 8     | Sales                           | COMPLETED   | Full transactional sales engine            |
 | 9     | Customers & Suppliers           | PENDING     |                                            |
 | 10    | Expenses & Profit Engine        | PENDING     |                                            |
 | 11    | Reports                         | PENDING     |                                            |
@@ -316,3 +316,36 @@ GET  /api/v1/purchases/{id}
 
 ### Status
 COMPLETED – Ready for Phase 8 (Sales).
+
+## Phase 8 – Sales Engine
+
+### Files Created
+- app/Models/Sale.php
+- app/Models/SaleItem.php
+- app/Models/SalePayment.php
+- app/Models/Customer.php
+- app/Services/SaleService.php
+- app/Http/Controllers/Api/V1/SaleController.php
+- app/Http/Requests/Sale/StoreSaleRequest.php
+- app/Http/Resources/SaleResource.php
+- routes/api.php (updated)
+
+### Endpoints
+GET  /api/v1/sales
+POST /api/v1/sales
+GET  /api/v1/sales/{id}
+
+### Critical Guarantees (as specified in architecture)
+1. Validate request
+2. Validate product availability (with row locking)
+3. Create sale
+4. Create sale items with historical selling price + historical cost price
+5. Reduce inventory via InventoryService
+6. Calculate COGS and gross profit
+7. Record payment
+8. Full transaction – any failure rolls back everything
+9. Idempotency key prevents duplicate sales
+10. Never uses today's cost for historical profit
+
+### Status
+COMPLETED – Ready for Phase 9 (Customers & Suppliers).

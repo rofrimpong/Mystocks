@@ -7,13 +7,8 @@ use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\InventoryController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\PurchaseController;
+use App\Http\Controllers\Api\V1\SaleController;
 use Illuminate\Support\Facades\Route;
-
-/*
-|--------------------------------------------------------------------------
-| API Routes - MyStocks v1
-|--------------------------------------------------------------------------
-*/
 
 Route::get('/health', function () {
     return response()->json([
@@ -69,9 +64,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/inventory/opening-stock', [InventoryController::class, 'openingStock']);
         Route::post('/inventory/adjust', [InventoryController::class, 'adjust']);
 
-        // Purchases
         Route::get('/purchases', [PurchaseController::class, 'index']);
         Route::post('/purchases', [PurchaseController::class, 'store']);
         Route::get('/purchases/{id}', [PurchaseController::class, 'show']);
+
+        // Sales
+        Route::get('/sales', [SaleController::class, 'index']);
+        Route::post('/sales', [SaleController::class, 'store']);
+        Route::get('/sales/{id}', [SaleController::class, 'show']);
     });
 });
