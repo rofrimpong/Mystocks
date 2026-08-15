@@ -19,7 +19,7 @@
 | 7     | Purchases                       | COMPLETED   | Create purchase + inventory increase       |
 | 8     | Sales                           | COMPLETED   | Full transactional sales engine            |
 | 9     | Customers & Suppliers           | COMPLETED   | Full CRUD for customers and suppliers      |
-| 10    | Expenses & Profit Engine        | PENDING     |                                            |
+| 10    | Expenses & Profit Engine        | COMPLETED   | Expenses + historical profit calculations  |
 | 11    | Reports                         | PENDING     |                                            |
 | 12    | Notifications / Low Stock       | PENDING     |                                            |
 | 13    | Offline Synchronization         | PENDING     | Idempotency, conflict handling             |
@@ -382,3 +382,38 @@ GET/PUT/DELETE /api/v1/suppliers/{id}
 
 ### Status
 COMPLETED – Ready for Phase 10 (Expenses & Profit).
+
+## Phase 10 – Expenses & Profit Engine
+
+### Files Created
+- app/Models/Expense.php
+- app/Models/ExpenseCategory.php
+- app/Services/ProfitService.php
+- app/Http/Controllers/Api/V1/ExpenseController.php
+- app/Http/Controllers/Api/V1/ExpenseCategoryController.php
+- app/Http/Controllers/Api/V1/ReportController.php
+- Requests + Resources for expenses
+- routes/api.php (updated)
+
+### Endpoints
+Expense Categories:
+GET/POST /api/v1/expense-categories
+
+Expenses:
+GET/POST /api/v1/expenses
+GET/PUT/DELETE /api/v1/expenses/{id}
+
+Reports:
+GET /api/v1/reports/profit
+GET /api/v1/reports/dashboard
+
+### Profit Calculation Rules
+- Revenue = SUM of completed sales.total
+- COGS = SUM of sale.cost_of_goods (historical)
+- Gross Profit = Revenue - COGS (from stored sale.gross_profit)
+- Expenses = SUM of expenses.amount in period
+- Net Profit = Gross Profit - Expenses
+- Never uses current product cost for historical profit
+
+### Status
+COMPLETED – Ready for Phase 11 (Reports expansion) or Phase 12/13 (Notifications / Offline).
