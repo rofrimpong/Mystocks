@@ -13,7 +13,7 @@
 | 1     | Project Foundation              | COMPLETED   | Directory structure, configs, Git, docs    |
 | 2     | Database Schema                 | COMPLETED   | All core migrations + key models created   |
 | 3     | Authentication                  | COMPLETED   | Register, login, logout, password reset    |
-| 4     | Tenant / Business / Branches    | PENDING     | Multi-tenancy core                         |
+| 4     | Tenant / Business / Branches    | COMPLETED   | Business + Branch CRUD, tenant middleware  |
 | 5     | Products & Categories           | PENDING     |                                            |
 | 6     | Inventory Engine                | PENDING     | Balances + Movements ledger                |
 | 7     | Purchases                       | PENDING     |                                            |
@@ -182,3 +182,38 @@ GET    /api/v1/auth/me              (auth:sanctum)
 
 ### Status
 COMPLETED – Ready for Phase 4 (Tenant / Business management enhancements).
+
+## Phase 4 – Tenant / Business / Branches
+
+### Files Created
+- app/Http/Middleware/EnsureBusinessAccess.php
+- app/Http/Controllers/Api/V1/BusinessController.php
+- app/Http/Controllers/Api/V1/BranchController.php
+- app/Http/Requests/Business/UpdateBusinessRequest.php
+- app/Http/Requests/Branch/StoreBranchRequest.php
+- app/Http/Requests/Branch/UpdateBranchRequest.php
+- app/Http/Resources/BusinessResource.php
+- app/Http/Resources/BranchResource.php
+- bootstrap/app.php (middleware alias)
+- routes/api.php (updated)
+
+### Endpoints
+GET    /api/v1/businesses
+GET    /api/v1/businesses/{id}
+PUT    /api/v1/businesses/{id}
+GET    /api/v1/business/current          (requires X-Business-Id)
+GET    /api/v1/branches                  (requires business context)
+POST   /api/v1/branches
+GET    /api/v1/branches/{id}
+PUT    /api/v1/branches/{id}
+DELETE /api/v1/branches/{id}
+
+### Tenant Isolation
+- Middleware `business` resolves current business from `X-Business-Id` header
+- Falls back to user's first active business if header omitted
+- Platform admins can access any business
+- Owner checks for destructive / configuration changes
+- Branch operations scoped to current business
+
+### Status
+COMPLETED – Ready for Phase 5 (Products & Categories).
