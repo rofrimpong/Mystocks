@@ -14,7 +14,7 @@
 | 2     | Database Schema                 | COMPLETED   | All core migrations + key models created   |
 | 3     | Authentication                  | COMPLETED   | Register, login, logout, password reset    |
 | 4     | Tenant / Business / Branches    | COMPLETED   | Business + Branch CRUD, tenant middleware  |
-| 5     | Products & Categories           | PENDING     |                                            |
+| 5     | Products & Categories           | COMPLETED   | Full CRUD, tenant-scoped, validation       |
 | 6     | Inventory Engine                | PENDING     | Balances + Movements ledger                |
 | 7     | Purchases                       | PENDING     |                                            |
 | 8     | Sales                           | PENDING     |                                            |
@@ -217,3 +217,40 @@ DELETE /api/v1/branches/{id}
 
 ### Status
 COMPLETED – Ready for Phase 5 (Products & Categories).
+
+## Phase 5 – Products & Categories
+
+### Files Created
+- app/Http/Controllers/Api/V1/CategoryController.php
+- app/Http/Controllers/Api/V1/ProductController.php
+- app/Http/Requests/Category/StoreCategoryRequest.php
+- app/Http/Requests/Category/UpdateCategoryRequest.php
+- app/Http/Requests/Product/StoreProductRequest.php
+- app/Http/Requests/Product/UpdateProductRequest.php
+- app/Http/Resources/CategoryResource.php
+- app/Http/Resources/ProductResource.php
+- routes/api.php (updated)
+
+### Endpoints (all require auth:sanctum + business middleware)
+Categories:
+GET/POST   /api/v1/categories
+GET/PUT/DELETE /api/v1/categories/{id}
+
+Products:
+GET/POST   /api/v1/products
+GET/PUT/DELETE /api/v1/products/{id}
+
+### Features
+- Full tenant isolation (business_id scoping)
+- Category parent/child support
+- Auto slug generation + uniqueness per business
+- SKU uniqueness per business
+- Supported units: piece, box, carton, kilogram, gram, litre, metre, service, pack, dozen
+- Search by name/SKU/barcode/brand
+- Pagination
+- Soft deletes on products
+- Cannot delete category that has products or children
+- Prices stored as decimal (no floats)
+
+### Status
+COMPLETED – Ready for Phase 6 (Inventory Engine).
