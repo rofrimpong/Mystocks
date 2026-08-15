@@ -15,7 +15,7 @@
 | 3     | Authentication                  | COMPLETED   | Register, login, logout, password reset    |
 | 4     | Tenant / Business / Branches    | COMPLETED   | Business + Branch CRUD, tenant middleware  |
 | 5     | Products & Categories           | COMPLETED   | Full CRUD, tenant-scoped, validation       |
-| 6     | Inventory Engine                | PENDING     | Balances + Movements ledger                |
+| 6     | Inventory Engine                | COMPLETED   | Service + balances + movements + adjust    |
 | 7     | Purchases                       | PENDING     |                                            |
 | 8     | Sales                           | PENDING     |                                            |
 | 9     | Customers & Suppliers           | PENDING     |                                            |
@@ -254,3 +254,33 @@ GET/PUT/DELETE /api/v1/products/{id}
 
 ### Status
 COMPLETED – Ready for Phase 6 (Inventory Engine).
+
+## Phase 6 – Inventory Engine
+
+### Files Created
+- app/Services/InventoryService.php          (core engine – transactional + locking)
+- app/Http/Controllers/Api/V1/InventoryController.php
+- app/Http/Requests/Inventory/OpeningStockRequest.php
+- app/Http/Requests/Inventory/AdjustStockRequest.php
+- app/Http/Resources/InventoryBalanceResource.php
+- app/Http/Resources/InventoryMovementResource.php
+- routes/api.php (updated)
+
+### Endpoints
+GET  /api/v1/inventory/balances
+GET  /api/v1/inventory/balances/{productId}
+GET  /api/v1/inventory/movements
+POST /api/v1/inventory/opening-stock
+POST /api/v1/inventory/adjust
+
+### Core Guarantees
+- Every stock change creates an immutable inventory_movement record
+- inventory_balances updated inside the same DB transaction
+- Row-level locking (lockForUpdate) prevents race conditions
+- Negative stock blocked unless business.allow_negative_stock = true
+- Average cost recalculated on inbound movements
+- Reason required for adjustments (audit)
+- All operations tenant + branch scoped
+
+### Status
+COMPLETED – Ready for Phase 7 (Purchases).

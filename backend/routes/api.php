@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BranchController;
 use App\Http\Controllers\Api\V1\BusinessController;
 use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\InventoryController;
 use App\Http\Controllers\Api\V1\ProductController;
 use Illuminate\Support\Facades\Route;
 
@@ -73,5 +74,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/products/{id}', [ProductController::class, 'show']);
         Route::put('/products/{id}', [ProductController::class, 'update']);
         Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+        // Inventory
+        Route::get('/inventory/balances', [InventoryController::class, 'balances']);
+        Route::get('/inventory/balances/{productId}', [InventoryController::class, 'showBalance']);
+        Route::get('/inventory/movements', [InventoryController::class, 'movements']);
+        Route::post('/inventory/opening-stock', [InventoryController::class, 'openingStock']);
+        Route::post('/inventory/adjust', [InventoryController::class, 'adjust']);
     });
 });
