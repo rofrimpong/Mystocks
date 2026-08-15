@@ -10,8 +10,8 @@
 
 | Phase | Module                          | Status      | Notes                                      |
 |-------|---------------------------------|-------------|--------------------------------------------|
-| 1     | Project Foundation              | IN PROGRESS | Directory structure, configs, Git, docs    |
-| 2     | Database Schema                 | PENDING     | Migrations for all core tables             |
+| 1     | Project Foundation              | COMPLETED   | Directory structure, configs, Git, docs    |
+| 2     | Database Schema                 | COMPLETED   | All core migrations + key models created   |
 | 3     | Authentication                  | PENDING     | Registration, login, password reset, OTP   |
 | 4     | Tenant / Business / Branches    | PENDING     | Multi-tenancy core                         |
 | 5     | Products & Categories           | PENDING     |                                            |
@@ -75,7 +75,7 @@ None yet (API routes will be added from Phase 3)
 None yet
 
 ### Status
-IN PROGRESS – Creating foundation files.
+COMPLETED – Foundation committed. Ready for Phase 2 (Database Schema).
 
 ---
 
@@ -86,3 +86,61 @@ IN PROGRESS – Creating foundation files.
 - All financial operations transactional
 - Idempotency keys for offline
 - Permission-based authorization (not role-name hardcoding)
+
+## Phase 2 – Database Schema
+
+### Files Created
+**Migrations:**
+- 2024_01_01_000001_create_users_table.php
+- 2024_01_01_000002_create_businesses_and_branches_tables.php
+- 2024_01_01_000003_create_permission_tables.php
+- 2024_01_01_000004_create_categories_and_products_tables.php
+- 2024_01_01_000005_create_inventory_tables.php
+- 2024_01_01_000006_create_sales_tables.php
+- 2024_01_01_000007_create_purchases_tables.php
+- 2024_01_01_000008_create_customers_suppliers_expenses_tables.php
+- 2024_01_01_000009_create_notifications_sync_audit_tables.php
+- 2024_01_01_000010_create_subscriptions_tables.php
+- 2024_01_01_000011_create_cache_jobs_tables.php
+
+**Models:**
+- User.php
+- Business.php
+- Branch.php
+- Category.php
+- Product.php
+- InventoryBalance.php
+- InventoryMovement.php
+
+**Config:**
+- config/permission.php
+
+### Database Tables
+users, password_reset_tokens, sessions,
+businesses, branches, business_user,
+permissions, roles, model_has_permissions, model_has_roles, role_has_permissions, personal_access_tokens,
+categories, products,
+inventory_balances, inventory_movements,
+sales, sale_items, sale_payments,
+purchases, purchase_items, purchase_payments,
+customers, customer_transactions,
+suppliers, supplier_transactions,
+expense_categories, expenses,
+notifications, device_tokens,
+idempotency_keys, sync_operations, audit_logs,
+plans, subscriptions, platform_payments,
+cache, cache_locks, jobs, job_batches, failed_jobs
+
+### Key Design Decisions
+- UUID primary keys on all domain entities
+- decimal(15,4) for quantities and money (no floats)
+- Historical cost stored on sale_items
+- Permanent inventory_movements ledger
+- Fast inventory_balances for current stock
+- Idempotency keys + sync_operations for offline
+- Full audit_logs table (append-only)
+- Soft deletes on major business entities
+- Tenant isolation via business_id on every business-owned table
+
+### Status
+COMPLETED – Schema ready. Models for core entities created. Ready for Phase 3 (Authentication).
