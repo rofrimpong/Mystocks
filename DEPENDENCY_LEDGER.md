@@ -594,3 +594,20 @@ Expenses UI COMPLETED.
 
 ### Status
 Reports UI COMPLETED. Core PWA trader workflows are covered.
+
+## Phase 14h – Settings Screen
+
+### Files
+- frontend/src/services/business.ts
+- frontend/src/pages/SettingsPage.tsx
+- frontend/src/App.tsx (updated)
+
+### Features
+- Account info
+- Switch business (multi-business users)
+- Switch branch
+- Edit business profile (name, phone, email, address, city, region)
+- Logout
+
+### Status
+Settings UI COMPLETED. Core PWA screens are complete.
