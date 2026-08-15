@@ -531,3 +531,18 @@ Sales POS COMPLETED.
 
 ### Status
 Inventory UI COMPLETED.
+
+## Phase 14d – Customers Screen
+
+### Files
+- frontend/src/services/customers.ts
+- frontend/src/pages/CustomersPage.tsx
+- frontend/src/App.tsx (updated)
+
+### Features
+- List customers with search
+- Outstanding balance display
+- Add customer modal (name, phone, email, address, credit limit)
+
+### Status
+Customers UI COMPLETED.
