@@ -577,3 +577,20 @@ Suppliers UI COMPLETED.
 
 ### Status
 Expenses UI COMPLETED.
+
+## Phase 14g – Reports Screen
+
+### Files
+- frontend/src/services/reports.ts
+- frontend/src/pages/ReportsPage.tsx
+- frontend/src/App.tsx (updated)
+
+### Features
+- Date range filter
+- Revenue, Gross Profit, Expenses, Net Profit cards
+- Low-stock alert banner
+- Top 5 best sellers
+- Uses historical cost for profit (as designed)
+
+### Status
+Reports UI COMPLETED. Core PWA trader workflows are covered.
