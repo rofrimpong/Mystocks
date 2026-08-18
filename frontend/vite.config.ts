@@ -7,6 +7,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {

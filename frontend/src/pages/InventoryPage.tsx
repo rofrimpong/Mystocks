@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
-import { AlertTriangle, Package, Plus, Search } from 'lucide-react';
+import { AlertTriangle, Package, Search } from 'lucide-react';
 import {
   fetchBalances,
   adjustStock,
@@ -7,7 +7,6 @@ import {
   type InventoryBalance,
 } from '../services/inventory';
 import { useOfflineStore } from '../stores/offlineStore';
-import { v4 as uuidv4 } from 'uuid';
 
 function qty(n: string | number) {
   return parseFloat(String(n)).toLocaleString('en-GH', { maximumFractionDigits: 2 });

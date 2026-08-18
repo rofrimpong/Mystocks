@@ -6,7 +6,6 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProductsPage from './pages/ProductsPage';
-import PlaceholderPage from './pages/PlaceholderPage';
 import SalesPage from './pages/SalesPage';
 import InventoryPage from './pages/InventoryPage';
 import CustomersPage from './pages/CustomersPage';
