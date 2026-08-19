@@ -9,7 +9,7 @@ on:
       release_tag:
         description: 'Release tag for the production ZIP'
         required: true
-        default: 'frontend-v1.0.0'
+        default: 'frontend-v1.0.2'
 
 permissions:
   contents: write
