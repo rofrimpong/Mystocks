@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
-import { Plus, Receipt, Search } from 'lucide-react';
+import { Plus, Receipt } from 'lucide-react';
 import {
   fetchExpenses,
   fetchExpenseCategories,
