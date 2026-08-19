@@ -1,0 +1,45 @@
+name: MyStocks Frontend Build
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Verify PWA assets
+        run: |
+          test -f dist/pwa-192x192.png
+          test -f dist/pwa-512x512.png
+          test -f dist/apple-touch-icon.png
+          test -f dist/favicon.ico
+          test -f dist/manifest.webmanifest
+
+      - name: Upload production build
+        uses: actions/upload-artifact@v4
+        with:
+          name: mystocks-frontend-dist
+          path: frontend/dist
+          if-no-files-found: error
