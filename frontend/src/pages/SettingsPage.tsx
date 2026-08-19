@@ -256,7 +256,7 @@ export default function SettingsPage() {
       </button>
 
       <p className="text-center text-xs text-slate-400">
-        MyStocks · CNMG Technologies · Ghana
+        CNMG STOCKS · CNMG Technologies · Ghana & Africa
       </p>
     </div>
   );

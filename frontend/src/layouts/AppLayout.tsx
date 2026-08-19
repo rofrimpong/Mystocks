@@ -64,7 +64,7 @@ export default function AppLayout() {
             MS
           </div>
           <div>
-            <div className="text-sm font-semibold text-slate-900">MyStocks</div>
+            <div className="text-sm font-semibold text-slate-900">CNMG STOCKS</div>
             <div className="text-xs text-slate-500">CNMG Technologies</div>
           </div>
         </div>
@@ -109,7 +109,7 @@ export default function AppLayout() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-700 text-xs font-bold text-white">
               MS
             </div>
-            <span className="font-semibold text-slate-900">MyStocks</span>
+            <span className="font-semibold text-slate-900">CNMG STOCKS</span>
           </div>
 
           <div className="flex items-center gap-3">

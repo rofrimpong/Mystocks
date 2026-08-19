@@ -41,7 +41,7 @@ export default function LoginPage() {
             MS
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Welcome back</h1>
-          <p className="mt-1 text-sm text-slate-500">Sign in to MyStocks</p>
+          <p className="mt-1 text-sm text-slate-500">Sign in to CNMG STOCKS</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
