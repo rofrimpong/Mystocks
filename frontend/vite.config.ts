@@ -13,9 +13,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'MyStocks',
-        short_name: 'MyStocks',
-        description: 'Inventory, Sales & Business Management for Ghanaian traders',
+        name: 'CNMG STOCKS',
+        short_name: 'CNMG STOCKS',
+        description: 'Inventory, Sales & Business Management for Ghanaian and African traders and small businesses',
         theme_color: '#0F766E',
         background_color: '#ffffff',
         display: 'standalone',
