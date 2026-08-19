@@ -13,6 +13,13 @@ import SuppliersPage from './pages/SuppliersPage';
 import ExpensesPage from './pages/ExpensesPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
+import ProfilePage from './pages/ProfilePage';
+import AdminPage from './pages/AdminPage';
+
+function AdminGate({ children }: { children: React.ReactNode }) {
+  const { user } = useAuthStore();
+  return user?.is_platform_admin ? <>{children}</> : <Navigate to="/" replace />;
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, loadFromStorage } = useAuthStore();
@@ -58,6 +65,8 @@ export default function App() {
         <Route path="expenses" element={<ExpensesPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="admin" element={<AdminGate><AdminPage /></AdminGate>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -9,6 +9,8 @@ import {
   Receipt,
   BarChart3,
   Settings,
+  UserCircle,
+  ShieldCheck,
   LogOut,
   Wifi,
   WifiOff,
@@ -18,7 +20,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useOfflineStore } from '../stores/offlineStore';
 import { useEffect } from 'react';
 
-const navItems = [
+const baseNavItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/sales', icon: ShoppingCart, label: 'Sales' },
   { to: '/products', icon: Package, label: 'Products' },
@@ -32,6 +34,7 @@ const navItems = [
 
 export default function AppLayout() {
   const { user, logout } = useAuthStore();
+  const navItems = user?.is_platform_admin ? [...baseNavItems, { to: '/admin', icon: ShieldCheck, label: 'Admin' }] : baseNavItems;
   const { isOnline, isSyncing, pendingCount, setOnline, syncAll } = useOfflineStore();
   const navigate = useNavigate();
   const pending = pendingCount();
@@ -61,7 +64,7 @@ export default function AppLayout() {
       <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
         <div className="flex h-16 items-center gap-2 border-b border-slate-100 px-5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-700 text-sm font-bold text-white">
-            MS
+            CS
           </div>
           <div>
             <div className="text-sm font-semibold text-slate-900">CNMG STOCKS</div>
@@ -107,12 +110,16 @@ export default function AppLayout() {
         <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4">
           <div className="flex items-center gap-2 md:hidden">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-700 text-xs font-bold text-white">
-              MS
+              CS
             </div>
             <span className="font-semibold text-slate-900">CNMG STOCKS</span>
           </div>
 
           <div className="flex items-center gap-3">
+            <button onClick={() => navigate('/profile')} className="flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700" title="Profile">
+              <UserCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">Profile</span>
+            </button>
             {/* Online / Offline indicator */}
             <div
               className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${

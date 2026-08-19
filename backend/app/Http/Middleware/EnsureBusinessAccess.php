@@ -46,6 +46,7 @@ class EnsureBusinessAccess
             // Fallback: use the first active business the user belongs to
             $membership = $user->businesses()
                 ->wherePivot('is_active', true)
+                ->whereIn('businesses.status', ['active', 'trial'])
                 ->first();
 
             if (! $membership) {
@@ -63,6 +64,7 @@ class EnsureBusinessAccess
         $membership = $user->businesses()
             ->where('businesses.id', $businessId)
             ->wherePivot('is_active', true)
+            ->whereIn('businesses.status', ['active', 'trial'])
             ->first();
 
         if (! $membership) {

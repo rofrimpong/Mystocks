@@ -138,6 +138,7 @@ class AuthController extends Controller
 
         $businesses = $user->businesses()
             ->wherePivot('is_active', true)
+            ->whereIn('businesses.status', ['active', 'trial'])
             ->get()
             ->map(fn (Business $b) => [
                 'id' => $b->id,
@@ -192,6 +193,7 @@ class AuthController extends Controller
 
         $businesses = $user->businesses()
             ->wherePivot('is_active', true)
+            ->whereIn('businesses.status', ['active', 'trial'])
             ->get()
             ->map(fn (Business $b) => [
                 'id' => $b->id,

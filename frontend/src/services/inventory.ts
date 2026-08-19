@@ -54,3 +54,10 @@ export async function openingStock(payload: {
   const { data } = await api.post('/inventory/opening-stock', payload);
   return data;
 }
+
+export interface InventoryMovement {
+  id: string; product_id: string; type: string; direction: 'in'|'out'; quantity: string; unit_cost?: string|null; reference_number?: string|null; reason?: string|null; occurred_at: string; user?: {id:string;name:string}; product?: {id:string;name:string;sku?:string|null};
+}
+export async function fetchMovements(params?: {product_id?:string;branch_id?:string;type?:string;per_page?:number}) {
+  const {data}=await api.get('/inventory/movements',{params}); return data as {data:InventoryMovement[];meta:{total:number}};
+}

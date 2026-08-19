@@ -19,6 +19,7 @@ class UpdateProductRequest extends FormRequest
             'sku' => ['nullable', 'string', 'max:50'],
             'barcode' => ['nullable', 'string', 'max:50'],
             'category_id' => ['nullable', 'uuid', 'exists:categories,id'],
+            'preferred_supplier_id' => ['nullable', 'uuid', 'exists:suppliers,id'],
             'brand' => ['nullable', 'string', 'max:100'],
             'unit' => ['sometimes', 'string', 'max:30', Rule::in([
                 'piece', 'box', 'carton', 'kilogram', 'gram', 'litre', 'metre', 'service', 'pack', 'dozen',

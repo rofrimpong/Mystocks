@@ -1,63 +1,34 @@
-import { useEffect, useState } from 'react';
-import api from '../services/api';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { Archive, Edit3, ImagePlus, Plus, Search } from 'lucide-react';
 import type { Product } from '../types';
+import { archiveProduct, createProduct, fetchCategories, fetchProducts, updateProduct, uploadProductImage } from '../services/products';
+import { fetchSuppliers, type Supplier } from '../services/suppliers';
+import { openingStock } from '../services/inventory';
+
+const units = ['piece','box','carton','kilogram','gram','litre','metre','service','pack','dozen'];
+const blank = {name:'',sku:'',barcode:'',category_id:'',preferred_supplier_id:'',unit:'piece',buying_price:'',selling_price:'',minimum_stock_level:'0',opening_quantity:'',description:''};
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [products,setProducts]=useState<Product[]>([]); const [categories,setCategories]=useState<Array<{id:string;name:string}>>([]); const [suppliers,setSuppliers]=useState<Supplier[]>([]);
+  const [loading,setLoading]=useState(true); const [search,setSearch]=useState(''); const [category,setCategory]=useState('');
+  const [show,setShow]=useState(false); const [editing,setEditing]=useState<Product|null>(null); const [form,setForm]=useState({...blank}); const [image,setImage]=useState<File|null>(null); const [saving,setSaving]=useState(false); const [message,setMessage]=useState('');
+  const branchId=localStorage.getItem('mystocks_branch_id') || '';
 
-  useEffect(() => {
-    const params = search ? { search } : {};
-    api
-      .get<{ data: Product[] }>('/products', { params })
-      .then((res) => setProducts(res.data.data))
-      .finally(() => setLoading(false));
-  }, [search]);
+  const load=useCallback(async()=>{setLoading(true); try{const r=await fetchProducts({search:search||undefined,category_id:category||undefined,per_page:100}); setProducts(r.data);} finally{setLoading(false)}},[search,category]);
+  useEffect(()=>{const t=setTimeout(load,200); return()=>clearTimeout(t)},[load]);
+  useEffect(()=>{Promise.all([fetchCategories(),fetchSuppliers({active_only:true,per_page:100})]).then(([c,s])=>{setCategories(c);setSuppliers(s.data)}).catch(()=>{});},[]);
 
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl font-bold text-slate-900">Products</h1>
-        <input
-          type="search"
-          placeholder="Search name, SKU, barcode…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm sm:w-72 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
-        />
-      </div>
+  const openNew=()=>{setEditing(null);setForm({...blank});setImage(null);setShow(true)};
+  const openEdit=(p:Product)=>{setEditing(p);setForm({name:p.name,sku:p.sku||'',barcode:p.barcode||'',category_id:p.category_id||'',preferred_supplier_id:p.preferred_supplier_id||'',unit:p.unit,buying_price:p.buying_price,selling_price:p.selling_price,minimum_stock_level:p.minimum_stock_level||'0',opening_quantity:'',description:''});setImage(null);setShow(true)};
+  const submit=async(e:FormEvent)=>{e.preventDefault();setSaving(true);setMessage(''); try{const payload={name:form.name,sku:form.sku||null,barcode:form.barcode||null,category_id:form.category_id||null,preferred_supplier_id:form.preferred_supplier_id||null,unit:form.unit,buying_price:Number(form.buying_price||0),selling_price:Number(form.selling_price||0),minimum_stock_level:Number(form.minimum_stock_level||0),description:form.description||null,track_inventory:true,is_active:true}; const product=editing?await updateProduct(editing.id,payload):await createProduct(payload); if(image) await uploadProductImage(product.id,image); if(!editing && branchId && Number(form.opening_quantity)>0) await openingStock({product_id:product.id,branch_id:branchId,quantity:Number(form.opening_quantity),unit_cost:Number(form.buying_price||0),reason:'Opening stock at product creation'}); setShow(false);setMessage(editing?'Product updated.':'Product added.');await load();}catch(err:any){setMessage(err?.response?.data?.message||'Could not save product.')}finally{setSaving(false)}};
+  const archive=async(p:Product)=>{if(!confirm(`Archive ${p.name}? Historical transactions will be preserved.`))return; try{await archiveProduct(p.id);setMessage('Product archived.');load()}catch{setMessage('Could not archive product.')}};
 
-      {loading ? (
-        <div className="py-12 text-center text-slate-500">Loading products…</div>
-      ) : products.length === 0 ? (
-        <div className="rounded-xl bg-white py-12 text-center text-slate-500 shadow-sm">
-          No products yet. Add your first product to get started.
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-          <ul className="divide-y divide-slate-100">
-            {products.map((p) => (
-              <li key={p.id} className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <div className="font-medium text-slate-900">{p.name}</div>
-                  <div className="text-xs text-slate-500">
-                    {p.sku || 'No SKU'} · {p.unit}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold tabular-nums text-slate-900 amount">
-                    GHS {parseFloat(p.selling_price).toFixed(2)}
-                  </div>
-                  <div className="text-xs text-slate-400">
-                    Cost: {parseFloat(p.buying_price).toFixed(2)}
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
+  return <div className="space-y-4">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><h1 className="text-xl font-bold text-slate-900">Products</h1><button onClick={openNew} className="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white"><Plus className="h-4 w-4"/>Add New Product</button></div>
+    <div className="grid gap-2 sm:grid-cols-[1fr_220px]"><div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"/><input className="w-full rounded-lg border border-slate-300 py-2.5 pl-10 pr-3 text-sm" placeholder="Search name, SKU, barcode…" value={search} onChange={e=>setSearch(e.target.value)}/></div><select className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm" value={category} onChange={e=>setCategory(e.target.value)}><option value="">All categories</option>{categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+    {message&&<div className="rounded-lg bg-slate-100 px-4 py-3 text-sm text-slate-700">{message}</div>}
+    {loading?<div className="py-12 text-center text-slate-500">Loading products…</div>:products.length===0?<div className="rounded-xl bg-white py-12 text-center text-slate-500 shadow-sm">No products yet. Use <b>Add New Product</b> to get started.</div>:<div className="overflow-hidden rounded-xl bg-white shadow-sm"><ul className="divide-y divide-slate-100">{products.map(p=><li key={p.id} className="flex items-center gap-3 px-4 py-3">{p.image_url?<img src={p.image_url} className="h-12 w-12 rounded-lg object-cover"/>:<div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100"><ImagePlus className="h-5 w-5 text-slate-400"/></div>}<div className="min-w-0 flex-1"><div className="font-medium text-slate-900">{p.name}</div><div className="text-xs text-slate-500">{p.sku||'No SKU'} · {p.unit}{p.category?.name?` · ${p.category.name}`:''}</div><div className="text-xs text-slate-400">Cost GHS {Number(p.buying_price).toFixed(2)} · Sell GHS {Number(p.selling_price).toFixed(2)}</div></div><div className="flex gap-1"><button onClick={()=>openEdit(p)} className="rounded-lg bg-slate-100 p-2 text-slate-700" title="Edit"><Edit3 className="h-4 w-4"/></button><button onClick={()=>archive(p)} className="rounded-lg bg-amber-50 p-2 text-amber-700" title="Archive"><Archive className="h-4 w-4"/></button></div></li>)}</ul></div>}
+    {show&&<div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 p-4 sm:items-center"><form onSubmit={submit} className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-2xl bg-white p-5 shadow-xl"><h2 className="text-lg font-bold">{editing?'Edit Product':'Add New Product'}</h2><div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <input required placeholder="Product name *" className="rounded-lg border px-3 py-2.5" value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/><input placeholder="SKU" className="rounded-lg border px-3 py-2.5" value={form.sku} onChange={e=>setForm({...form,sku:e.target.value})}/><input placeholder="Barcode" className="rounded-lg border px-3 py-2.5" value={form.barcode} onChange={e=>setForm({...form,barcode:e.target.value})}/><select className="rounded-lg border px-3 py-2.5" value={form.category_id} onChange={e=>setForm({...form,category_id:e.target.value})}><option value="">Category</option>{categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select><select className="rounded-lg border px-3 py-2.5" value={form.unit} onChange={e=>setForm({...form,unit:e.target.value})}>{units.map(u=><option key={u}>{u}</option>)}</select><select className="rounded-lg border px-3 py-2.5" value={form.preferred_supplier_id} onChange={e=>setForm({...form,preferred_supplier_id:e.target.value})}><option value="">Preferred supplier</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select><input required type="number" min="0" step="any" placeholder="Cost price *" className="rounded-lg border px-3 py-2.5" value={form.buying_price} onChange={e=>setForm({...form,buying_price:e.target.value})}/><input required type="number" min="0" step="any" placeholder="Selling price *" className="rounded-lg border px-3 py-2.5" value={form.selling_price} onChange={e=>setForm({...form,selling_price:e.target.value})}/>{!editing&&<input type="number" min="0" step="any" placeholder="Opening quantity" className="rounded-lg border px-3 py-2.5" value={form.opening_quantity} onChange={e=>setForm({...form,opening_quantity:e.target.value})}/>}<input type="number" min="0" step="any" placeholder="Minimum/reorder level" className="rounded-lg border px-3 py-2.5" value={form.minimum_stock_level} onChange={e=>setForm({...form,minimum_stock_level:e.target.value})}/><input type="file" accept="image/png,image/jpeg,image/webp" className="rounded-lg border px-3 py-2" onChange={e=>setImage(e.target.files?.[0]||null)}/><textarea placeholder="Description" className="rounded-lg border px-3 py-2.5 sm:col-span-2" value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></div><div className="mt-5 flex gap-2"><button type="button" onClick={()=>setShow(false)} className="flex-1 rounded-lg border py-2.5">Cancel</button><button disabled={saving} className="flex-1 rounded-lg bg-teal-700 py-2.5 font-semibold text-white">{saving?'Saving…':editing?'Save changes':'Add product'}</button></div></form></div>}
+  </div>;
 }

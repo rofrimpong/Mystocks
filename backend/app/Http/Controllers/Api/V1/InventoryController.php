@@ -34,7 +34,22 @@ class InventoryController extends Controller
             ->with(['product', 'branch']);
 
         if ($request->filled('branch_id')) {
-            $query->where('branch_id', $request->input('branch_id'));
+            $branchId = $request->input('branch_id');
+            $business->branches()->where('id', $branchId)->firstOrFail();
+
+            // Ensure tracked products with no movements yet still appear as zero/out-of-stock.
+            $business->products()->where('track_inventory', true)->where('is_active', true)
+                ->select(['id', 'business_id'])
+                ->chunkById(200, function ($products) use ($business, $branchId) {
+                    foreach ($products as $product) {
+                        InventoryBalance::firstOrCreate(
+                            ['branch_id' => $branchId, 'product_id' => $product->id],
+                            ['business_id' => $business->id, 'quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0]
+                        );
+                    }
+                });
+
+            $query->where('branch_id', $branchId);
         }
 
         if ($request->boolean('low_stock', false)) {

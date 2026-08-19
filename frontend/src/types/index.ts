@@ -40,6 +40,11 @@ export interface Product {
   is_active: boolean;
   is_service: boolean;
   category_id?: string | null;
+  preferred_supplier_id?: string | null;
+  image_path?: string | null;
+  image_url?: string | null;
+  category?: { id: string; name: string } | null;
+  preferred_supplier?: { id: string; name: string } | null;
 }
 
 export interface DashboardData {

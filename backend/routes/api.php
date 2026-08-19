@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\AdminController;
+use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\BranchController;
 use App\Http\Controllers\Api\V1\BusinessController;
 use App\Http\Controllers\Api\V1\CategoryController;
@@ -19,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', function () {
     return response()->json([
         'status' => 'ok',
-        'service' => 'MyStocks API',
+        'service' => 'CNMG STOCKS API',
         'version' => '1.0.0',
         'timestamp' => now()->toIso8601String(),
     ]);
@@ -39,6 +41,16 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/profile', [ProfileController::class, 'show']);
+    Route::put('/profile', [ProfileController::class, 'update']);
+
+    Route::prefix('admin')->group(function () {
+        Route::get('/summary', [AdminController::class, 'summary']);
+        Route::get('/users', [AdminController::class, 'users']);
+        Route::patch('/users/{id}', [AdminController::class, 'updateUser']);
+        Route::get('/businesses', [AdminController::class, 'businesses']);
+        Route::patch('/businesses/{id}', [AdminController::class, 'updateBusiness']);
+    });
     Route::get('/businesses', [BusinessController::class, 'index']);
     Route::get('/businesses/{id}', [BusinessController::class, 'show']);
     Route::put('/businesses/{id}', [BusinessController::class, 'update']);
@@ -63,6 +75,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/products/{id}', [ProductController::class, 'show']);
         Route::put('/products/{id}', [ProductController::class, 'update']);
         Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+        Route::post('/products/{id}/image', [ProductController::class, 'uploadImage']);
 
         Route::get('/inventory/balances', [InventoryController::class, 'balances']);
         Route::get('/inventory/balances/{productId}', [InventoryController::class, 'showBalance']);

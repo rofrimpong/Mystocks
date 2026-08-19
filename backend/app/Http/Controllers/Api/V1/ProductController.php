@@ -19,7 +19,7 @@ class ProductController extends Controller
         $business = $request->attributes->get('current_business');
 
         $query = $business->products()
-            ->with('category')
+            ->with(['category', 'preferredSupplier'])
             ->orderBy('name');
 
         if ($request->boolean('active_only', false)) {
@@ -74,11 +74,15 @@ class ProductController extends Controller
             }
         }
 
+        if (! empty($data['preferred_supplier_id']) && ! $business->suppliers()->where('id', $data['preferred_supplier_id'])->exists()) {
+            return response()->json(['message' => 'Supplier does not belong to this business.'], 422);
+        }
+
         $product = Product::create($data);
 
         return response()->json([
             'message' => 'Product created successfully.',
-            'data' => new ProductResource($product->load('category')),
+            'data' => new ProductResource($product->load(['category', 'preferredSupplier'])),
         ], 201);
     }
 
@@ -87,7 +91,7 @@ class ProductController extends Controller
         /** @var Business $business */
         $business = $request->attributes->get('current_business');
 
-        $product = $business->products()->with('category')->findOrFail($id);
+        $product = $business->products()->with(['category', 'preferredSupplier'])->findOrFail($id);
 
         return response()->json([
             'data' => new ProductResource($product),
@@ -109,6 +113,10 @@ class ProductController extends Controller
             }
         }
 
+        if (! empty($data['preferred_supplier_id']) && ! $business->suppliers()->where('id', $data['preferred_supplier_id'])->exists()) {
+            return response()->json(['message' => 'Supplier does not belong to this business.'], 422);
+        }
+
         // SKU uniqueness check within business (excluding self)
         if (isset($data['sku']) && $data['sku'] !== null) {
             $skuExists = $business->products()
@@ -124,7 +132,23 @@ class ProductController extends Controller
 
         return response()->json([
             'message' => 'Product updated successfully.',
-            'data' => new ProductResource($product->fresh()->load('category')),
+            'data' => new ProductResource($product->fresh()->load(['category', 'preferredSupplier'])),
+        ]);
+    }
+
+    public function uploadImage(Request $request, string $id): JsonResponse
+    {
+        /** @var Business $business */
+        $business = $request->attributes->get('current_business');
+        $product = $business->products()->findOrFail($id);
+
+        $request->validate(['image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096']]);
+        $path = $request->file('image')->store('products/'.$business->id, 'public');
+        $product->update(['image_path' => $path]);
+
+        return response()->json([
+            'message' => 'Product image uploaded successfully.',
+            'data' => new ProductResource($product->fresh()->load(['category', 'preferredSupplier'])),
         ]);
     }
 
