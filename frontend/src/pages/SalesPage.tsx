@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Minus, Plus, Search, ShoppingCart, Trash2, X } from 'lucide-react';
-import { fetchProducts, createSale, fetchSales, fetchSale, type CartItem, type CreateSalePayload } from '../services/sales';
+import { fetchProducts, createSale, fetchSales, fetchSale, cancelSale, type CartItem, type CreateSalePayload } from '../services/sales';
 import type { Product, Sale } from '../types';
 import { useOfflineStore } from '../stores/offlineStore';
 import { useAuthStore } from '../stores/authStore';
@@ -27,8 +27,9 @@ export default function SalesPage() {
   const [historyLoading, setHistoryLoading] = useState(false);
 
   const { isOnline, enqueue, syncAll } = useOfflineStore();
-  const { businesses, currentBusinessId } = useAuthStore();
+  const { businesses, currentBusinessId, currentBusinessRole, isBusinessOwner, user } = useAuthStore();
   const currentBusiness = businesses.find((b) => b.id === currentBusinessId) || businesses[0];
+  const canCancelSales = !!user?.is_platform_admin || isBusinessOwner || currentBusinessRole === 'owner' || currentBusinessRole === 'manager';
 
   const loadProducts = useCallback(async (q?: string) => {
     try {
@@ -137,6 +138,20 @@ export default function SalesPage() {
       setMessage({ type: 'error', text: 'Could not load sale details.' });
     }
   };
+  const handleCancelSale = async (sale: Sale) => {
+    if (!canCancelSales || sale.status !== 'completed') return;
+    if (!confirm('Cancel sale ' + sale.sale_number + '? Stock will be restored.')) return;
+    try {
+      await cancelSale(sale.id);
+      setMessage({ type: 'success', text: 'Sale cancelled and stock restored.' });
+      setLastSale(null);
+      await loadSalesHistory();
+      await loadProducts();
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err?.response?.data?.message || 'Could not cancel sale.' });
+    }
+  };
+
   const completeSale = async () => {
     if (cart.length === 0) return;
     setSubmitting(true);
@@ -473,7 +488,7 @@ export default function SalesPage() {
               </div>
             </div>
 
-            <div className="receipt-actions mt-5 grid grid-cols-2 gap-2">
+            <div className="receipt-actions mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
               <button
                 type="button"
                 onClick={() => setLastSale(null)}
@@ -489,6 +504,7 @@ export default function SalesPage() {
               >
                 Print Receipt
               </button>
+              {canCancelSales && lastSale.status === 'completed' && <button type="button" onClick={() => handleCancelSale(lastSale)} className="col-span-2 rounded-lg bg-red-600 py-2.5 font-semibold text-white sm:col-span-1">Cancel Sale</button>}
             </div>
           </div>
         </div>

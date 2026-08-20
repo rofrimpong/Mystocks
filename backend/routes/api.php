@@ -95,6 +95,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/sales', [SaleController::class, 'index'])->middleware('business.role:manager,cashier,salesperson');
         Route::post('/sales', [SaleController::class, 'store'])->middleware('business.role:manager,cashier,salesperson');
         Route::get('/sales/{id}', [SaleController::class, 'show'])->middleware('business.role:manager,cashier,salesperson');
+        Route::post('/sales/{id}/cancel', [SaleController::class, 'cancel'])->middleware('business.role:manager');
 
         Route::get('/customers', [CustomerController::class, 'index'])->middleware('business.role:manager,cashier,salesperson');
         Route::post('/customers', [CustomerController::class, 'store'])->middleware('business.role:manager,cashier,salesperson');

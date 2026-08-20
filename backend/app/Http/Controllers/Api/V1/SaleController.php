@@ -110,6 +110,20 @@ class SaleController extends Controller
         ], 201);
     }
 
+    public function cancel(Request $request, string $id): JsonResponse
+    {
+        /** @var Business $business */
+        $business = $request->attributes->get("current_business");
+
+        $sale = Sale::where("business_id", $business->id)->findOrFail($id);
+        $sale = $this->saleService->cancel($sale, $request->user()->id);
+
+        return response()->json([
+            "message" => "Sale cancelled and stock restored.",
+            "data" => new SaleResource($sale),
+        ]);
+    }
+
     public function show(Request $request, string $id): JsonResponse
     {
         /** @var Business $business */

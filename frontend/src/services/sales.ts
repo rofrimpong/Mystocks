@@ -57,3 +57,8 @@ export async function fetchSale(id: string): Promise<Sale> {
   const { data } = await api.get<{ data: Sale }>(`/sales/${id}`);
   return data.data;
 }
+
+export async function cancelSale(id: string): Promise<Sale> {
+  const { data } = await api.post<{ data: Sale }>(`/sales/${id}/cancel`);
+  return data.data;
+}

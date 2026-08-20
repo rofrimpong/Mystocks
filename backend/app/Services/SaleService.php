@@ -230,6 +230,42 @@ class SaleService
         });
     }
 
+    public function cancel(Sale $sale, string $userId): Sale
+    {
+        return DB::transaction(function () use ($sale, $userId) {
+            $sale = Sale::where("id", $sale->id)->lockForUpdate()->firstOrFail();
+            if ($sale->status === "cancelled") {
+                throw ValidationException::withMessages(["sale" => ["Sale has already been cancelled."]]);
+            }
+            if ($sale->status !== "completed") {
+                throw ValidationException::withMessages(["sale" => ["Only completed sales can be cancelled."]]);
+            }
+            $sale->load(["items.product"]);
+            foreach ($sale->items as $item) {
+                if ($item->product && $item->product->track_inventory && ! $item->product->is_service) {
+                    $this->inventoryService->move([
+                        "business_id" => $sale->business_id,
+                        "branch_id" => $sale->branch_id,
+                        "product_id" => $item->product_id,
+                        "type" => "sale_return",
+                        "direction" => "in",
+                        "quantity" => $item->quantity,
+                        "unit_cost" => $item->unit_cost_price,
+                        "reference_type" => Sale::class,
+                        "reference_id" => $sale->id,
+                        "reference_number" => $sale->sale_number,
+                        "user_id" => $userId,
+                        "reason" => "Sale cancelled",
+                        "occurred_at" => now(),
+                    ]);
+                }
+            }
+            $sale->status = "cancelled";
+            $sale->save();
+            return $sale->load(["items", "payments", "customer", "branch", "cashier"]);
+        });
+    }
+
     public function recordPayment(Sale $sale, array $paymentData, string $userId): SalePayment
     {
         $amount = $this->dec($paymentData['amount']);
