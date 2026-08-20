@@ -65,6 +65,22 @@ class ProductController extends Controller
         /** @var Business $business */
         $business = $request->attributes->get('current_business');
 
+        $productLimit = $business->productLimit();
+
+        if ($productLimit !== null) {
+            $activeProducts = $business->products()->count();
+
+            if ($activeProducts >= $productLimit) {
+                return response()->json([
+                    'message' => sprintf(
+                        'Your %s plan allows a maximum of %d products.',
+                        ucfirst($business->plan ?? 'trial'),
+                        $productLimit
+                    ),
+                ], 422);
+            }
+        }
+
         $data = $request->validated();
         $data['business_id'] = $business->id;
 
