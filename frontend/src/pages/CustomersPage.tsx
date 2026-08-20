@@ -190,7 +190,7 @@ export default function CustomersPage() {
       {showForm && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 p-4 sm:items-center">
           <form
-            onSubmit={handleCreate}
+            onSubmit={handleSubmit}
             className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
           >
             <h2 className="text-lg font-bold text-slate-900">{editing ? 'Edit customer' : 'Add customer'}</h2>
