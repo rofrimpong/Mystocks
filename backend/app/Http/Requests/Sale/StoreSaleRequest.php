@@ -30,7 +30,16 @@ class StoreSaleRequest extends FormRequest
             'items.*.discount_amount' => ['nullable', 'numeric', 'min:0', 'decimal:0,4'],
             'payment' => ['nullable', 'array'],
             'payment.method' => ['required_with:payment', Rule::in(['cash', 'mobile_money', 'card', 'bank_transfer', 'credit', 'other'])],
-            'payment.amount' => ['required_with:payment', 'numeric', 'gt:0', 'decimal:0,4'],
+            'payment.amount' => [
+                Rule::requiredIf(
+                    fn () => is_array($this->input('payment'))
+                        && $this->input('payment.method') !== 'credit'
+                ),
+                'nullable',
+                'numeric',
+                'gt:0',
+                'decimal:0,4',
+            ],
             'payment.reference' => ['nullable', 'string', 'max:100'],
             'payment.provider' => ['nullable', 'string', 'max:50'],
         ];

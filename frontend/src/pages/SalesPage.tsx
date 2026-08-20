@@ -3,6 +3,7 @@ import { Minus, Plus, Search, ShoppingCart, Trash2, X } from 'lucide-react';
 import { fetchProducts, createSale, type CartItem } from '../services/sales';
 import type { Product } from '../types';
 import { useOfflineStore } from '../stores/offlineStore';
+import { fetchBalances, type InventoryBalance } from '../services/inventory';
 import { v4 as uuidv4 } from 'uuid';
 
 function money(n: number) {
@@ -11,6 +12,7 @@ function money(n: number) {
 
 export default function SalesPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [balances, setBalances] = useState<InventoryBalance[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -23,8 +25,20 @@ export default function SalesPage() {
 
   const loadProducts = useCallback(async (q?: string) => {
     try {
-      const list = await fetchProducts(q);
+      const branchId =
+        localStorage.getItem('mystocks_branch_id') || undefined;
+
+      const [list, balanceResponse] = await Promise.all([
+        fetchProducts(q),
+        fetchBalances({
+          search: q || undefined,
+          branch_id: branchId,
+          per_page: 100,
+        }),
+      ]);
+
       setProducts(list);
+      setBalances(balanceResponse.data);
     } catch {
       setMessage({ type: 'error', text: 'Could not load products.' });
     } finally {
@@ -84,6 +98,8 @@ export default function SalesPage() {
   );
 
   const cartCount = cart.reduce((n, i) => n + i.quantity, 0);
+  const getStock = (p: Product) => Number(balances.find((b) => b.product_id === p.id)?.available_quantity ?? balances.find((b) => b.product_id === p.id)?.quantity ?? 0);
+  const isOutOfStock = (p: Product) => p.track_inventory && !p.is_service && getStock(p) <= 0;
 
   const completeSale = async () => {
     if (cart.length === 0) return;
@@ -102,10 +118,13 @@ export default function SalesPage() {
         unit_selling_price: i.unit_selling_price,
         discount_amount: i.discount_amount,
       })),
-      payment: {
-        method: paymentMethod,
-        amount: subtotal,
-      },
+      payment:
+        paymentMethod === 'credit'
+          ? { method: 'credit' }
+          : {
+              method: paymentMethod,
+              amount: subtotal,
+            },
       idempotency_key: uuidv4(),
       device_id: deviceId,
     };
@@ -212,7 +231,8 @@ export default function SalesPage() {
             {products.map((p) => (
               <button
                 key={p.id}
-                onClick={() => addToCart(p)}
+                onClick={() => !isOutOfStock(p) && addToCart(p)}
+                disabled={isOutOfStock(p)}
                 className="flex flex-col rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition active:scale-[0.98] hover:border-teal-300 hover:shadow"
               >
                 <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-teal-50 text-sm font-bold text-teal-700">
@@ -220,6 +240,7 @@ export default function SalesPage() {
                 </div>
                 <div className="line-clamp-2 text-sm font-medium text-slate-900">{p.name}</div>
                 <div className="mt-1 text-xs text-slate-400">{p.unit}</div>
+                {p.track_inventory && !p.is_service && <div className={`mt-1 text-xs font-medium ${isOutOfStock(p) ? "text-red-600" : getStock(p) <= Number(p.minimum_stock_level || 0) ? "text-amber-600" : "text-slate-500"}`}>{isOutOfStock(p) ? "Out of stock" : `Stock: ${getStock(p).toLocaleString("en-GH",{maximumFractionDigits:2})}`}</div>}
                 <div className="mt-2 text-base font-bold tabular-nums text-teal-800">
                   GHS {money(parseFloat(p.selling_price) || 0)}
                 </div>

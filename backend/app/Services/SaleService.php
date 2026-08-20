@@ -215,9 +215,15 @@ class SaleService
                 }
             }
 
-            // 5. Record payment if provided
+            // 5. Record payment if provided.
+            // Credit means the amount remains outstanding; no cash payment is recorded yet.
             if (! empty($data['payment'])) {
-                $this->recordPayment($sale, $data['payment'], $data['cashier_id']);
+                if (($data['payment']['method'] ?? null) === 'credit') {
+                    $sale->payment_status = 'credit';
+                    $sale->save();
+                } else {
+                    $this->recordPayment($sale, $data['payment'], $data['cashier_id']);
+                }
             }
 
             return $sale->load(['items', 'payments', 'customer', 'branch', 'cashier']);
