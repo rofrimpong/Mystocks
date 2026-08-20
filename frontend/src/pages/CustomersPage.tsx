@@ -188,7 +188,7 @@ export default function CustomersPage() {
 
       {/* Add customer modal */}
       {showForm && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+        <div className="fixed inset-0 z-40 overflow-y-auto bg-black/40 p-4 pb-24 sm:flex sm:items-center sm:justify-center sm:pb-4">
           <form
             onSubmit={handleSubmit}
             className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
@@ -219,15 +219,6 @@ export default function CustomersPage() {
                 placeholder="Address"
                 value={form.address}
                 onChange={(e) => update('address', e.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
-              />
-              <input
-                type="number"
-                min="0"
-                step="any"
-                placeholder="Credit limit (GHS)"
-                value={form.credit_limit}
-                onChange={(e) => update('credit_limit', e.target.value)}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
               />
             </div>

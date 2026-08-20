@@ -34,3 +34,19 @@ export async function createSupplier(payload: {
   const { data } = await api.post('/suppliers', payload);
   return data;
 }
+
+export async function updateSupplier(
+  id: string,
+  payload: Partial<{
+    name: string;
+    company: string;
+    phone: string;
+    email: string;
+    address: string;
+    notes: string;
+    status: string;
+  }>
+) {
+  const { data } = await api.put(`/suppliers/${id}`, payload);
+  return data;
+}

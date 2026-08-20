@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
-import { Plus, Search, Truck } from 'lucide-react';
-import { fetchSuppliers, createSupplier, type Supplier } from '../services/suppliers';
+import { Plus, Search, Truck, Edit3 } from 'lucide-react';
+import { fetchSuppliers, createSupplier, updateSupplier, type Supplier } from '../services/suppliers';
 
 function money(n: string | number) {
   return parseFloat(String(n)).toLocaleString('en-GH', {
@@ -15,6 +15,7 @@ export default function SuppliersPage() {
   const [search, setSearch] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<Supplier | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     name: '',
@@ -44,29 +45,59 @@ export default function SuppliersPage() {
     return () => clearTimeout(t);
   }, [load]);
 
+  const openEdit = (supplier: Supplier) => {
+    setEditing(supplier);
+    setForm({
+      name: supplier.name || '',
+      company: supplier.company || '',
+      phone: supplier.phone || '',
+      email: supplier.email || '',
+      address: supplier.address || '',
+    });
+    setShowForm(true);
+  };
+
   const update = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
-  const handleCreate = async (e: FormEvent) => {
+  const toggleSupplier = async (supplier: Supplier) => {
+    try {
+      const nextStatus = supplier.status === 'active' ? 'inactive' : 'active';
+      await updateSupplier(supplier.id, { status: nextStatus });
+      setMessage({ type: 'success', text: nextStatus === 'active' ? 'Supplier activated.' : 'Supplier deactivated.' });
+      await load();
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err?.response?.data?.message || 'Could not update supplier.' });
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) return;
     setSubmitting(true);
     setMessage(null);
     try {
-      await createSupplier({
+      const payload = {
         name: form.name.trim(),
         company: form.company || undefined,
         phone: form.phone || undefined,
         email: form.email || undefined,
         address: form.address || undefined,
-      });
-      setMessage({ type: 'success', text: 'Supplier added successfully.' });
-      setForm({ name: '', company: '', phone: '', email: '', address: '' });
+      };
+      if (editing) {
+        await updateSupplier(editing.id, payload);
+        setMessage({ type: 'success', text: 'Supplier updated successfully.' });
+      } else {
+        await createSupplier(payload);
+        setMessage({ type: 'success', text: 'Supplier added successfully.' });
+      }
+      setEditing(null);
+      setForm({ name: '', company: '', phone: '', email: '', address: '', });
       setShowForm(false);
       load();
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        'Could not create supplier.';
+        'Could not save supplier.';
       setMessage({ type: 'error', text: msg });
     } finally {
       setSubmitting(false);
@@ -78,7 +109,7 @@ export default function SuppliersPage() {
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl font-bold text-slate-900">Suppliers</h1>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => { setEditing(null); setForm({ name: '', company: '', phone: '', email: '', address: '' }); setShowForm(true); }}
           className="flex items-center gap-1.5 rounded-lg bg-teal-700 px-3 py-2 text-sm font-medium text-white"
         >
           <Plus className="h-4 w-4" />
@@ -121,7 +152,7 @@ export default function SuppliersPage() {
             {suppliers.map((s) => {
               const balance = parseFloat(s.outstanding_balance || '0');
               return (
-                <li key={s.id} className="flex items-center gap-3 px-4 py-3">
+                <li key={s.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
                   <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600">
                     {s.name.slice(0, 1).toUpperCase()}
                   </div>
@@ -142,6 +173,7 @@ export default function SuppliersPage() {
                     ) : (
                       <div className="text-xs text-slate-400">No balance</div>
                     )}
+                    <div className="flex flex-wrap gap-1"><button type="button" onClick={() => openEdit(s)} className="rounded-lg bg-slate-100 p-2 text-slate-700" title="Edit"><Edit3 className="h-4 w-4" /></button><button type="button" onClick={() => toggleSupplier(s)} className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold ${s.status === 'active' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>{s.status === 'active' ? 'Deactivate' : 'Activate'}</button></div>
                   </div>
                 </li>
               );
@@ -151,12 +183,12 @@ export default function SuppliersPage() {
       )}
 
       {showForm && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+        <div className="fixed inset-0 z-40 overflow-y-auto bg-black/40 p-4 pb-24 sm:flex sm:items-center sm:justify-center sm:pb-4">
           <form
-            onSubmit={handleCreate}
+            onSubmit={handleSubmit}
             className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
           >
-            <h2 className="text-lg font-bold text-slate-900">Add supplier</h2>
+            <h2 className="text-lg font-bold text-slate-900">{editing ? 'Edit supplier' : 'Add supplier'}</h2>
             <div className="mt-4 space-y-3">
               <input
                 required
@@ -204,7 +236,7 @@ export default function SuppliersPage() {
                 disabled={submitting}
                 className="flex-1 rounded-lg bg-teal-700 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
               >
-                {submitting ? 'Saving…' : 'Save supplier'}
+                {submitting ? 'Saving…' : editing ? 'Save changes' : 'Save supplier'}
               </button>
             </div>
           </form>
