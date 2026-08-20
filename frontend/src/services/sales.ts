@@ -40,3 +40,20 @@ export async function createSale(payload: CreateSalePayload): Promise<Sale> {
   const { data } = await api.post<{ data: Sale }>('/sales', payload);
   return data.data;
 }
+
+export async function fetchSales(params?: {
+  branch_id?: string;
+  payment_status?: string;
+  cashier_id?: string;
+  from?: string;
+  to?: string;
+  per_page?: number;
+}): Promise<{ data: Sale[]; meta: { total: number } }> {
+  const { data } = await api.get('/sales', { params });
+  return data;
+}
+
+export async function fetchSale(id: string): Promise<Sale> {
+  const { data } = await api.get<{ data: Sale }>(`/sales/${id}`);
+  return data.data;
+}

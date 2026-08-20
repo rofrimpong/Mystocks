@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Minus, Plus, Search, ShoppingCart, Trash2, X } from 'lucide-react';
-import { fetchProducts, createSale, type CartItem, type CreateSalePayload } from '../services/sales';
+import { fetchProducts, createSale, fetchSales, fetchSale, type CartItem, type CreateSalePayload } from '../services/sales';
 import type { Product, Sale } from '../types';
 import { useOfflineStore } from '../stores/offlineStore';
 import { useAuthStore } from '../stores/authStore';
@@ -22,6 +22,9 @@ export default function SalesPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showCart, setShowCart] = useState(false);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
+  const [view, setView] = useState<'pos' | 'history'>('pos');
+  const [salesHistory, setSalesHistory] = useState<Sale[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   const { isOnline, enqueue, syncAll } = useOfflineStore();
   const { businesses, currentBusinessId } = useAuthStore();
@@ -103,6 +106,37 @@ export default function SalesPage() {
   const getStock = (p: Product) => Number(balances.find((b) => b.product_id === p.id)?.available_quantity ?? balances.find((b) => b.product_id === p.id)?.quantity ?? 0);
   const isOutOfStock = (p: Product) => p.track_inventory && !p.is_service && getStock(p) <= 0;
 
+  const loadSalesHistory = async () => {
+    setHistoryLoading(true);
+
+    try {
+      const branchId =
+        localStorage.getItem('mystocks_branch_id') ||
+        currentBusiness?.branch_id ||
+        balances[0]?.branch_id ||
+        undefined;
+
+      const result = await fetchSales({
+        branch_id: branchId,
+        per_page: 50,
+      });
+
+      setSalesHistory(result.data);
+    } catch {
+      setMessage({ type: 'error', text: 'Could not load sales history.' });
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const openSaleFromHistory = async (id: string) => {
+    try {
+      const sale = await fetchSale(id);
+      setLastSale(sale);
+    } catch {
+      setMessage({ type: 'error', text: 'Could not load sale details.' });
+    }
+  };
   const completeSale = async () => {
     if (cart.length === 0) return;
     setSubmitting(true);
@@ -188,9 +222,13 @@ export default function SalesPage() {
       <div className="flex-1 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-xl font-bold text-slate-900">Sales</h1>
+        <div className="flex rounded-xl bg-slate-100 p-1">
+          <button type="button" onClick={() => setView('pos')} className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${view==='pos'?'bg-white text-teal-700 shadow-sm':'text-slate-500'}`}>New Sale</button>
+          <button type="button" onClick={() => { setView('history'); loadSalesHistory(); }} className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${view==='history'?'bg-white text-teal-700 shadow-sm':'text-slate-500'}`}>History</button>
+        </div>
           <button
             onClick={() => setShowCart(true)}
-            className="relative flex items-center gap-2 rounded-lg bg-teal-700 px-3 py-2 text-sm font-medium text-white lg:hidden"
+            className={`${view === 'history' ? 'hidden ' : ''}relative flex items-center gap-2 rounded-lg bg-teal-700 px-3 py-2 text-sm font-medium text-white lg:hidden`}
           >
             <ShoppingCart className="h-4 w-4" />
             Cart
@@ -202,7 +240,7 @@ export default function SalesPage() {
           </button>
         </div>
 
-        <div className="relative">
+        <div className={view === 'pos' ? 'relative' : 'hidden'}>
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="search"
@@ -223,7 +261,8 @@ export default function SalesPage() {
           </div>
         )}
 
-        {loading ? (
+        {view === 'history' && <div className="space-y-3">{historyLoading ? <div className="py-12 text-center text-slate-500">Loading sales history…</div> : salesHistory.length === 0 ? <div className="rounded-xl bg-white py-12 text-center text-slate-500 shadow-sm">No sales recorded yet.</div> : <div className="overflow-hidden rounded-xl bg-white shadow-sm"><div className="divide-y divide-slate-100">{salesHistory.map(sale => <div key={sale.id} className="flex items-center gap-3 p-4"><div className="min-w-0 flex-1"><div className="font-semibold text-slate-900">{sale.sale_number}</div><div className="mt-1 text-xs text-slate-500">{sale.sold_at ? new Date(sale.sold_at).toLocaleString('en-GB') : '—'}</div><div className="mt-1 text-xs capitalize text-slate-500">{sale.cashier?.name || '—'} · {sale.payment_status}</div></div><div className="text-right"><div className="font-bold">GHS {money(Number(sale.total))}</div><button type="button" onClick={() => openSaleFromHistory(sale.id)} className="mt-2 rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700">View</button></div></div>)}</div></div>}</div>}
+        {view === 'pos' && (loading ? (
           <div className="py-16 text-center text-slate-500">Loading products…</div>
         ) : products.length === 0 ? (
           <div className="rounded-xl bg-white py-16 text-center text-slate-500 shadow-sm">
@@ -250,13 +289,13 @@ export default function SalesPage() {
               </button>
             ))}
           </div>
-        )}
+        ))}
       </div>
 
       {/* Cart panel - desktop always visible, mobile as drawer */}
       <div
         className={`
-          fixed inset-y-0 right-0 z-30 flex w-full max-w-md flex-col border-l border-slate-200 bg-white shadow-xl transition-transform lg:static lg:z-0 lg:max-w-sm lg:translate-x-0 lg:shadow-sm lg:rounded-xl lg:border
+          ${view === 'history' ? 'hidden ' : ''}fixed inset-y-0 right-0 z-30 flex w-full max-w-md flex-col border-l border-slate-200 bg-white shadow-xl transition-transform lg:static lg:z-0 lg:max-w-sm lg:translate-x-0 lg:shadow-sm lg:rounded-xl lg:border
           ${showCart ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
         `}
       >
