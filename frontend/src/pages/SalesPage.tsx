@@ -356,9 +356,10 @@ export default function SalesPage() {
         </div>
       </div>
 
+      <style>{`@media print { body * { visibility: hidden !important; } .receipt-print, .receipt-print * { visibility: visible !important; } .receipt-print { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; max-width: none !important; box-shadow: none !important; border-radius: 0 !important; padding: 16px !important; } .receipt-print button { display: none !important; } @page { margin: 8mm; } }`}</style>
       {lastSale && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 p-4 pb-24 sm:flex sm:items-center sm:justify-center sm:pb-4">
-          <div className="mx-auto w-full max-w-md rounded-2xl bg-white p-5 pb-8 shadow-xl sm:my-auto">
+          <div className="receipt-print mx-auto w-full max-w-md rounded-2xl bg-white p-5 pb-8 shadow-xl sm:my-auto">
             <div className="text-center">
               <div className="text-lg font-bold text-slate-900">Sale completed</div>
               <div className="mt-1 text-sm font-medium text-teal-700">
@@ -371,8 +372,8 @@ export default function SalesPage() {
                 <span className="text-slate-500">Date</span>
                 <span className="text-right font-medium">
                   {lastSale.sold_at
-                    ? new Date(lastSale.sold_at).toLocaleString()
-                    : new Date().toLocaleString()}
+                    ? new Date(lastSale.sold_at).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })
+                    : new Date().toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}
                 </span>
               </div>
 
