@@ -150,7 +150,7 @@ export default function AppLayout() {
         {/* Bottom nav - mobile */}
         <nav className="fixed bottom-0 left-0 right-0 z-20 border-t border-slate-200 bg-white md:hidden">
           <div className="flex justify-around py-1">
-            {([...navItems.slice(0, 4), { to: "/settings", icon: Settings, label: "Settings" }]).map((item) => (
+            {([...navItems.slice(0, 4), { to: "/settings", icon: Settings, label: "Settings" }, ...(user?.is_platform_admin ? [{ to: "/admin", icon: ShieldCheck, label: "Admin" }] : [])]).map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
