@@ -22,9 +22,10 @@ class StaffController extends Controller
     {
         abort_unless(
             $request->attributes->get('is_business_owner', false)
-            || $request->user()?->isPlatformAdmin(),
+            || $request->user()?->isPlatformAdmin()
+            || $request->attributes->get('business_role') === 'manager',
             403,
-            'Only the business owner can manage staff.'
+            'Only the business owner or a manager can manage staff.'
         );
     }
 

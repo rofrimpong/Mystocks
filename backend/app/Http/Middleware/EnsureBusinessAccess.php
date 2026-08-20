@@ -56,6 +56,11 @@ class EnsureBusinessAccess
             }
 
             $request->attributes->set('current_business', $membership);
+            $request->attributes->set('is_business_owner', (bool) $membership->pivot->is_owner);
+            $request->attributes->set(
+                'business_role',
+                $membership->pivot->is_owner ? 'owner' : ($membership->pivot->role ?? 'staff')
+            );
             $request->attributes->set('current_branch_id', $membership->pivot->branch_id);
 
             return $next($request);
@@ -75,6 +80,10 @@ class EnsureBusinessAccess
 
         $request->attributes->set('current_business', $membership);
         $request->attributes->set('is_business_owner', (bool) $membership->pivot->is_owner);
+        $request->attributes->set(
+            'business_role',
+            $membership->pivot->is_owner ? 'owner' : ($membership->pivot->role ?? 'staff')
+        );
         $request->attributes->set('current_branch_id', $membership->pivot->branch_id);
 
         $this->setBranchIfProvided($request, $membership);

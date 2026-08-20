@@ -60,70 +60,70 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/business/current', [BusinessController::class, 'current']);
 
         Route::get('/branches', [BranchController::class, 'index']);
-        Route::post('/branches', [BranchController::class, 'store']);
+        Route::post('/branches', [BranchController::class, 'store'])->middleware('business.role:manager');
         Route::get('/branches/{id}', [BranchController::class, 'show']);
-        Route::put('/branches/{id}', [BranchController::class, 'update']);
-        Route::delete('/branches/{id}', [BranchController::class, 'destroy']);
+        Route::put('/branches/{id}', [BranchController::class, 'update'])->middleware('business.role:manager');
+        Route::delete('/branches/{id}', [BranchController::class, 'destroy'])->middleware('business.role:manager');
 
-        Route::get('/staff', [StaffController::class, 'index']);
-        Route::post('/staff', [StaffController::class, 'store']);
-        Route::put('/staff/{id}', [StaffController::class, 'update']);
+        Route::get('/staff', [StaffController::class, 'index'])->middleware('business.role:manager');
+        Route::post('/staff', [StaffController::class, 'store'])->middleware('business.role:manager');
+        Route::put('/staff/{id}', [StaffController::class, 'update'])->middleware('business.role:manager');
 
         Route::get('/categories', [CategoryController::class, 'index']);
-        Route::post('/categories', [CategoryController::class, 'store']);
+        Route::post('/categories', [CategoryController::class, 'store'])->middleware('business.role:manager,inventory_officer');
         Route::get('/categories/{id}', [CategoryController::class, 'show']);
-        Route::put('/categories/{id}', [CategoryController::class, 'update']);
-        Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+        Route::put('/categories/{id}', [CategoryController::class, 'update'])->middleware('business.role:manager,inventory_officer');
+        Route::delete('/categories/{id}', [CategoryController::class, 'destroy'])->middleware('business.role:manager,inventory_officer');
 
         Route::get('/products', [ProductController::class, 'index']);
-        Route::post('/products', [ProductController::class, 'store']);
+        Route::post('/products', [ProductController::class, 'store'])->middleware('business.role:manager,inventory_officer');
         Route::get('/products/{id}', [ProductController::class, 'show']);
-        Route::put('/products/{id}', [ProductController::class, 'update']);
-        Route::delete('/products/{id}', [ProductController::class, 'destroy']);
-        Route::post('/products/{id}/image', [ProductController::class, 'uploadImage']);
+        Route::put('/products/{id}', [ProductController::class, 'update'])->middleware('business.role:manager,inventory_officer');
+        Route::delete('/products/{id}', [ProductController::class, 'destroy'])->middleware('business.role:manager,inventory_officer');
+        Route::post('/products/{id}/image', [ProductController::class, 'uploadImage'])->middleware('business.role:manager,inventory_officer');
 
         Route::get('/inventory/balances', [InventoryController::class, 'balances']);
         Route::get('/inventory/balances/{productId}', [InventoryController::class, 'showBalance']);
         Route::get('/inventory/movements', [InventoryController::class, 'movements']);
-        Route::post('/inventory/opening-stock', [InventoryController::class, 'openingStock']);
-        Route::post('/inventory/adjust', [InventoryController::class, 'adjust']);
+        Route::post('/inventory/opening-stock', [InventoryController::class, 'openingStock'])->middleware('business.role:manager,inventory_officer');
+        Route::post('/inventory/adjust', [InventoryController::class, 'adjust'])->middleware('business.role:manager,inventory_officer');
 
-        Route::get('/purchases', [PurchaseController::class, 'index']);
-        Route::post('/purchases', [PurchaseController::class, 'store']);
-        Route::get('/purchases/{id}', [PurchaseController::class, 'show']);
+        Route::get('/purchases', [PurchaseController::class, 'index'])->middleware('business.role:manager,inventory_officer');
+        Route::post('/purchases', [PurchaseController::class, 'store'])->middleware('business.role:manager,inventory_officer');
+        Route::get('/purchases/{id}', [PurchaseController::class, 'show'])->middleware('business.role:manager,inventory_officer');
 
-        Route::get('/sales', [SaleController::class, 'index']);
-        Route::post('/sales', [SaleController::class, 'store']);
-        Route::get('/sales/{id}', [SaleController::class, 'show']);
+        Route::get('/sales', [SaleController::class, 'index'])->middleware('business.role:manager,cashier,salesperson');
+        Route::post('/sales', [SaleController::class, 'store'])->middleware('business.role:manager,cashier,salesperson');
+        Route::get('/sales/{id}', [SaleController::class, 'show'])->middleware('business.role:manager,cashier,salesperson');
 
-        Route::get('/customers', [CustomerController::class, 'index']);
-        Route::post('/customers', [CustomerController::class, 'store']);
-        Route::get('/customers/{id}', [CustomerController::class, 'show']);
-        Route::put('/customers/{id}', [CustomerController::class, 'update']);
-        Route::delete('/customers/{id}', [CustomerController::class, 'destroy']);
+        Route::get('/customers', [CustomerController::class, 'index'])->middleware('business.role:manager,cashier,salesperson');
+        Route::post('/customers', [CustomerController::class, 'store'])->middleware('business.role:manager,cashier,salesperson');
+        Route::get('/customers/{id}', [CustomerController::class, 'show'])->middleware('business.role:manager,cashier,salesperson');
+        Route::put('/customers/{id}', [CustomerController::class, 'update'])->middleware('business.role:manager,cashier,salesperson');
+        Route::delete('/customers/{id}', [CustomerController::class, 'destroy'])->middleware('business.role:manager');
 
-        Route::get('/suppliers', [SupplierController::class, 'index']);
-        Route::post('/suppliers', [SupplierController::class, 'store']);
-        Route::get('/suppliers/{id}', [SupplierController::class, 'show']);
-        Route::put('/suppliers/{id}', [SupplierController::class, 'update']);
-        Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy']);
+        Route::get('/suppliers', [SupplierController::class, 'index'])->middleware('business.role:manager,inventory_officer');
+        Route::post('/suppliers', [SupplierController::class, 'store'])->middleware('business.role:manager,inventory_officer');
+        Route::get('/suppliers/{id}', [SupplierController::class, 'show'])->middleware('business.role:manager,inventory_officer');
+        Route::put('/suppliers/{id}', [SupplierController::class, 'update'])->middleware('business.role:manager,inventory_officer');
+        Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy'])->middleware('business.role:manager');
 
         // Expenses
-        Route::get('/expense-categories', [ExpenseCategoryController::class, 'index']);
-        Route::post('/expense-categories', [ExpenseCategoryController::class, 'store']);
-        Route::get('/expenses', [ExpenseController::class, 'index']);
-        Route::post('/expenses', [ExpenseController::class, 'store']);
-        Route::get('/expenses/{id}', [ExpenseController::class, 'show']);
-        Route::put('/expenses/{id}', [ExpenseController::class, 'update']);
-        Route::delete('/expenses/{id}', [ExpenseController::class, 'destroy']);
+        Route::get('/expense-categories', [ExpenseCategoryController::class, 'index'])->middleware('business.role:manager');
+        Route::post('/expense-categories', [ExpenseCategoryController::class, 'store'])->middleware('business.role:manager');
+        Route::get('/expenses', [ExpenseController::class, 'index'])->middleware('business.role:manager');
+        Route::post('/expenses', [ExpenseController::class, 'store'])->middleware('business.role:manager');
+        Route::get('/expenses/{id}', [ExpenseController::class, 'show'])->middleware('business.role:manager');
+        Route::put('/expenses/{id}', [ExpenseController::class, 'update'])->middleware('business.role:manager');
+        Route::delete('/expenses/{id}', [ExpenseController::class, 'destroy'])->middleware('business.role:manager');
 
         // Reports / Profit
-        Route::get('/reports/profit', [ReportController::class, 'profitSummary']);
+        Route::get('/reports/profit', [ReportController::class, 'profitSummary'])->middleware('business.role:manager');
         Route::get('/reports/dashboard', [ReportController::class, 'dashboard']);
-        Route::get('/reports/best-sellers', [ReportController::class, 'bestSellers']);
-        Route::get('/reports/low-stock', [ReportController::class, 'lowStock']);
-        Route::get('/reports/inventory-valuation', [ReportController::class, 'inventoryValuation']);
-        Route::get('/reports/sales-by-day', [ReportController::class, 'salesByDay']);
+        Route::get('/reports/best-sellers', [ReportController::class, 'bestSellers'])->middleware('business.role:manager');
+        Route::get('/reports/low-stock', [ReportController::class, 'lowStock'])->middleware('business.role:manager,inventory_officer');
+        Route::get('/reports/inventory-valuation', [ReportController::class, 'inventoryValuation'])->middleware('business.role:manager,inventory_officer');
+        Route::get('/reports/sales-by-day', [ReportController::class, 'salesByDay'])->middleware('business.role:manager');
 
         // Offline Sync
         Route::post('/sync/push', [SyncController::class, 'push']);

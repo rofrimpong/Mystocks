@@ -26,6 +26,32 @@ class SyncController extends Controller
         $business = $request->attributes->get('current_business');
         $data = $request->validated();
 
+        $user = $request->user();
+        $isOwner = $request->attributes->get('is_business_owner', false);
+        $role = $request->attributes->get('business_role');
+
+        if (! $user->isPlatformAdmin() && ! $isOwner) {
+            $allowedByType = [
+                'sale' => ['manager', 'cashier', 'salesperson'],
+                'inventory_adjustment' => ['manager', 'inventory_officer'],
+                'opening_stock' => ['manager', 'inventory_officer'],
+            ];
+
+            foreach ($data['operations'] as $operation) {
+                $type = $operation['operation_type'] ?? null;
+                $allowedRoles = $allowedByType[$type] ?? [];
+
+                if (! in_array($role, $allowedRoles, true)) {
+                    return response()->json([
+                        'message' => sprintf(
+                            'Your role does not permit the offline operation "%s".',
+                            $type ?? 'unknown'
+                        ),
+                    ], 403);
+                }
+            }
+        }
+
         $result = $this->syncService->processBatch([
             'business_id' => $business->id,
             'user_id' => $request->user()->id,
