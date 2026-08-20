@@ -21,7 +21,7 @@ export interface CreateSalePayload {
   }>;
   payment?: {
     method: 'cash' | 'mobile_money' | 'card' | 'bank_transfer' | 'credit' | 'other';
-    amount: number;
+    amount?: number;
     reference?: string;
     provider?: string;
   };

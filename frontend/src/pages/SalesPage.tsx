@@ -131,7 +131,7 @@ export default function SalesPage() {
 
     try {
       if (!isOnline) {
-        enqueue('sale', payload);
+        enqueue('sale', payload as unknown as Record<string, unknown>);
         setMessage({
           type: 'success',
           text: 'Sale saved offline. It will sync when you are back online.',
@@ -161,7 +161,7 @@ export default function SalesPage() {
 
       // If network error, queue offline
       if (!(err as { response?: unknown })?.response) {
-        enqueue('sale', payload);
+        enqueue('sale', payload as unknown as Record<string, unknown>);
         setMessage({
           type: 'success',
           text: 'Network issue — sale saved offline and will sync later.',
