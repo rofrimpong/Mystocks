@@ -317,7 +317,7 @@ export default function SalesPage() {
           )}
         </div>
 
-        <div className="border-t border-slate-100 p-4 space-y-3">
+        <div className="border-t border-slate-100 p-4 pb-24 space-y-3 lg:pb-4">
           <div className="flex justify-between text-sm">
             <span className="text-slate-500">Subtotal</span>
             <span className="font-bold tabular-nums text-slate-900">GHS {money(subtotal)}</span>
