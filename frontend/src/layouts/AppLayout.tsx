@@ -5,6 +5,7 @@ import {
   Package,
   Warehouse,
   Users,
+  UserCog,
   Truck,
   Receipt,
   BarChart3,
@@ -15,16 +16,18 @@ import {
   Wifi,
   WifiOff,
   RefreshCw,
+  Menu,
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useOfflineStore } from '../stores/offlineStore';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const baseNavItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/sales', icon: ShoppingCart, label: 'Sales' },
   { to: '/products', icon: Package, label: 'Products' },
   { to: '/inventory', icon: Warehouse, label: 'Inventory' },
+  { to: '/staff', icon: UserCog, label: 'Staff' },
   { to: '/customers', icon: Users, label: 'Customers' },
   { to: '/suppliers', icon: Truck, label: 'Suppliers' },
   { to: '/expenses', icon: Receipt, label: 'Expenses' },
@@ -38,6 +41,7 @@ export default function AppLayout() {
   const { isOnline, isSyncing, pendingCount, setOnline, syncAll } = useOfflineStore();
   const navigate = useNavigate();
   const pending = pendingCount();
+  const [showMore, setShowMore] = useState(false);
 
   useEffect(() => {
     const onOnline = () => {
@@ -147,10 +151,46 @@ export default function AppLayout() {
           <Outlet />
         </main>
 
+        {/* Mobile More menu */}
+        {showMore && (
+          <div className="fixed inset-0 z-30 bg-black/30 md:hidden" onClick={() => setShowMore(false)}>
+            <div
+              className="absolute bottom-16 left-3 right-3 rounded-2xl bg-white p-3 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { to: '/staff', icon: UserCog, label: 'Staff' },
+                  { to: '/customers', icon: Users, label: 'Customers' },
+                  { to: '/suppliers', icon: Truck, label: 'Suppliers' },
+                  { to: '/expenses', icon: Receipt, label: 'Expenses' },
+                  { to: '/reports', icon: BarChart3, label: 'Reports' },
+                  ...(user?.is_platform_admin
+                    ? [{ to: '/admin', icon: ShieldCheck, label: 'Admin' }]
+                    : []),
+                ].map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setShowMore(false)}
+                    className="flex flex-col items-center gap-1 rounded-xl bg-slate-50 px-2 py-3 text-xs font-medium text-slate-700"
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {item.label}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Bottom nav - mobile */}
-        <nav className="fixed bottom-0 left-0 right-0 z-20 border-t border-slate-200 bg-white md:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white md:hidden">
           <div className="flex justify-around py-1">
-            {([...navItems.slice(0, 4), { to: "/settings", icon: Settings, label: "Settings" }, ...(user?.is_platform_admin ? [{ to: "/admin", icon: ShieldCheck, label: "Admin" }] : [])]).map((item) => (
+            {[
+              ...navItems.slice(0, 4),
+              { to: '/settings', icon: Settings, label: 'Settings' },
+            ].map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -165,9 +205,17 @@ export default function AppLayout() {
                 {item.label}
               </NavLink>
             ))}
+
+            <button
+              type="button"
+              onClick={() => setShowMore((value) => !value)}
+              className="flex flex-col items-center gap-0.5 px-2 py-2 text-[10px] font-medium text-slate-500"
+            >
+              <Menu className="h-5 w-5" />
+              More
+            </button>
           </div>
-        </nav>
-      </div>
+        </nav>      </div>
     </div>
   );
 }

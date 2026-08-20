@@ -46,7 +46,7 @@ class Business extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'business_user')
-            ->withPivot(['branch_id', 'is_owner', 'is_active'])
+            ->withPivot(['branch_id', 'is_owner', 'role', 'is_active'])
             ->withTimestamps();
     }
 
