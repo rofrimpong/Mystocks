@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Minus, Plus, Search, ShoppingCart, Trash2, X } from 'lucide-react';
-import { fetchProducts, createSale, type CartItem } from '../services/sales';
+import { fetchProducts, createSale, type CartItem, type CreateSalePayload } from '../services/sales';
 import type { Product } from '../types';
 import { useOfflineStore } from '../stores/offlineStore';
 import { fetchBalances, type InventoryBalance } from '../services/inventory';
@@ -110,7 +110,7 @@ export default function SalesPage() {
     const deviceId = localStorage.getItem('mystocks_device_id') || uuidv4();
     localStorage.setItem('mystocks_device_id', deviceId);
 
-    const payload = {
+    const payload: CreateSalePayload = {
       branch_id: branchId,
       items: cart.map((i) => ({
         product_id: i.product.id,
