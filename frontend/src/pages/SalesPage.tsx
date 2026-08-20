@@ -3,6 +3,7 @@ import { Minus, Plus, Search, ShoppingCart, Trash2, X } from 'lucide-react';
 import { fetchProducts, createSale, type CartItem, type CreateSalePayload } from '../services/sales';
 import type { Product } from '../types';
 import { useOfflineStore } from '../stores/offlineStore';
+import { useAuthStore } from '../stores/authStore';
 import { fetchBalances, type InventoryBalance } from '../services/inventory';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -22,12 +23,12 @@ export default function SalesPage() {
   const [showCart, setShowCart] = useState(false);
 
   const { isOnline, enqueue, syncAll } = useOfflineStore();
+  const { businesses, currentBusinessId } = useAuthStore();
+  const currentBusiness = businesses.find((b) => b.id === currentBusinessId) || businesses[0];
 
   const loadProducts = useCallback(async (q?: string) => {
     try {
-      const branchId =
-        localStorage.getItem('mystocks_branch_id') || undefined;
-
+      const branchId = localStorage.getItem('mystocks_branch_id') || currentBusiness?.branch_id || undefined;
       const [list, balanceResponse] = await Promise.all([
         fetchProducts(q),
         fetchBalances({
@@ -44,7 +45,7 @@ export default function SalesPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentBusiness?.branch_id]);
 
   useEffect(() => {
     loadProducts();
@@ -106,7 +107,7 @@ export default function SalesPage() {
     setSubmitting(true);
     setMessage(null);
 
-    const branchId = localStorage.getItem('mystocks_branch_id') || undefined;
+    const branchId = localStorage.getItem('mystocks_branch_id') || currentBusiness?.branch_id || balances[0]?.branch_id || undefined;
     const deviceId = localStorage.getItem('mystocks_device_id') || uuidv4();
     localStorage.setItem('mystocks_device_id', deviceId);
 
