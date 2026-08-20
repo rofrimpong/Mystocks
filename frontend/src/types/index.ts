@@ -90,3 +90,50 @@ export interface OfflineOperation {
   status: 'pending' | 'syncing' | 'synced' | 'conflict' | 'failed';
   conflict_reason?: string;
 }
+
+export interface SaleItem {
+  id: string;
+  product_id: string;
+  product_name: string;
+  product_sku?: string | null;
+  quantity: string;
+  unit_selling_price: string;
+  discount_amount: string;
+  line_total: string;
+}
+
+export interface SalePayment {
+  id: string;
+  method: string;
+  amount: string;
+  reference?: string | null;
+  provider?: string | null;
+  paid_at?: string | null;
+}
+
+export interface Sale {
+  id: string;
+  sale_number: string;
+  status: string;
+  subtotal: string;
+  discount_amount: string;
+  tax_amount: string;
+  total: string;
+  payment_status: string;
+  sold_at?: string | null;
+  branch?: {
+    id: string;
+    name: string;
+  };
+  cashier?: {
+    id: string;
+    name: string;
+  };
+  customer?: {
+    id: string;
+    name: string;
+    phone?: string | null;
+  };
+  items?: SaleItem[];
+  payments?: SalePayment[];
+}

@@ -1,5 +1,5 @@
 import api from './api';
-import type { Product } from '../types';
+import type { Product, Sale } from '../types';
 
 export interface CartItem {
   product: Product;
@@ -36,7 +36,7 @@ export async function fetchProducts(search?: string): Promise<Product[]> {
   return data.data;
 }
 
-export async function createSale(payload: CreateSalePayload) {
-  const { data } = await api.post('/sales', payload);
-  return data;
+export async function createSale(payload: CreateSalePayload): Promise<Sale> {
+  const { data } = await api.post<{ data: Sale }>('/sales', payload);
+  return data.data;
 }

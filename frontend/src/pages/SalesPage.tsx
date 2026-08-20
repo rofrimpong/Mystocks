@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Minus, Plus, Search, ShoppingCart, Trash2, X } from 'lucide-react';
 import { fetchProducts, createSale, type CartItem, type CreateSalePayload } from '../services/sales';
-import type { Product } from '../types';
+import type { Product, Sale } from '../types';
 import { useOfflineStore } from '../stores/offlineStore';
 import { useAuthStore } from '../stores/authStore';
 import { fetchBalances, type InventoryBalance } from '../services/inventory';
@@ -21,6 +21,7 @@ export default function SalesPage() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showCart, setShowCart] = useState(false);
+  const [lastSale, setLastSale] = useState<Sale | null>(null);
 
   const { isOnline, enqueue, syncAll } = useOfflineStore();
   const { businesses, currentBusinessId } = useAuthStore();
@@ -142,7 +143,8 @@ export default function SalesPage() {
         return;
       }
 
-      await createSale(payload);
+      const sale = await createSale(payload);
+      setLastSale(sale);
       setMessage({ type: 'success', text: `Sale completed — GHS ${money(subtotal)}` });
       setCart([]);
       setShowCart(false);
@@ -353,6 +355,104 @@ export default function SalesPage() {
           </button>
         </div>
       </div>
+
+      {lastSale && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 p-4 pb-24 sm:flex sm:items-center sm:justify-center sm:pb-4">
+          <div className="mx-auto w-full max-w-md rounded-2xl bg-white p-5 pb-8 shadow-xl sm:my-auto">
+            <div className="text-center">
+              <div className="text-lg font-bold text-slate-900">Sale completed</div>
+              <div className="mt-1 text-sm font-medium text-teal-700">
+                {lastSale.sale_number}
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-2 rounded-xl bg-slate-50 p-4 text-sm">
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Date</span>
+                <span className="text-right font-medium">
+                  {lastSale.sold_at
+                    ? new Date(lastSale.sold_at).toLocaleString()
+                    : new Date().toLocaleString()}
+                </span>
+              </div>
+
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Cashier</span>
+                <span className="font-medium">
+                  {lastSale.cashier?.name || '—'}
+                </span>
+              </div>
+
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Branch</span>
+                <span className="font-medium">
+                  {lastSale.branch?.name || '—'}
+                </span>
+              </div>
+
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Payment</span>
+                <span className="font-semibold capitalize">
+                  {lastSale.payment_status}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4 divide-y divide-slate-100">
+              {(lastSale.items || []).map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-start justify-between gap-3 py-3"
+                >
+                  <div>
+                    <div className="font-medium text-slate-900">
+                      {item.product_name}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {Number(item.quantity).toLocaleString('en-GH', {
+                        maximumFractionDigits: 2,
+                      })}
+                      {' × '}
+                      GHS {money(Number(item.unit_selling_price))}
+                    </div>
+                  </div>
+
+                  <div className="font-semibold">
+                    GHS {money(Number(item.line_total))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-slate-700">Total</span>
+                <span className="text-xl font-bold text-teal-800">
+                  GHS {money(Number(lastSale.total))}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setLastSale(null)}
+                className="rounded-lg border py-2.5 font-semibold text-slate-700"
+              >
+                New Sale
+              </button>
+
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="rounded-lg bg-teal-700 py-2.5 font-semibold text-white"
+              >
+                Print Receipt
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile cart backdrop */}
       {showCart && (
