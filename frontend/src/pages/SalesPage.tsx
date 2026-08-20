@@ -356,7 +356,7 @@ export default function SalesPage() {
         </div>
       </div>
 
-      <style>{`@media print { body * { visibility: hidden !important; } .receipt-print, .receipt-print * { visibility: visible !important; } .receipt-print { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; max-width: none !important; box-shadow: none !important; border-radius: 0 !important; padding: 16px !important; } .receipt-print button { display: none !important; } @page { margin: 8mm; } }`}</style>
+      <style>{`@media print { body > * { display: none !important; } #root { display: block !important; } #root > * { display: none !important; } .receipt-print { display: block !important; position: fixed !important; inset: 0 auto auto 0 !important; width: 100% !important; max-width: none !important; margin: 0 !important; padding: 12mm !important; box-shadow: none !important; border-radius: 0 !important; background: white !important; } .receipt-actions { display: none !important; } @page { size: auto; margin: 0; } }`}</style>
       {lastSale && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 p-4 pb-24 sm:flex sm:items-center sm:justify-center sm:pb-4">
           <div className="receipt-print mx-auto w-full max-w-md rounded-2xl bg-white p-5 pb-8 shadow-xl sm:my-auto">
@@ -434,7 +434,7 @@ export default function SalesPage() {
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-2">
+            <div className="receipt-actions mt-5 grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setLastSale(null)}
