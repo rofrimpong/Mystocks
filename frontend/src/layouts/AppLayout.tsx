@@ -120,9 +120,7 @@ export default function AppLayout() {
       {/* Sidebar - desktop */}
       <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
         <div className="flex h-16 items-center gap-2 border-b border-slate-100 px-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-700 text-sm font-bold text-white">
-            CS
-          </div>
+          <img src="/pwa-192x192.png" alt="CNMG STOCKS" className="h-10 w-10 rounded-xl object-cover" />
           <div>
             <div className="text-sm font-semibold text-slate-900">CNMG STOCKS</div>
             <div className="text-xs text-slate-500">CNMG Technologies</div>
@@ -166,9 +164,7 @@ export default function AppLayout() {
         {/* Top bar */}
         <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4">
           <div className="flex items-center gap-2 md:hidden">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-700 text-xs font-bold text-white">
-              CS
-            </div>
+            <img src="/pwa-192x192.png" alt="CNMG STOCKS" className="h-9 w-9 rounded-xl object-cover" />
             <span className="font-semibold text-slate-900">CNMG STOCKS</span>
           </div>
 

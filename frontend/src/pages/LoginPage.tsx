@@ -37,9 +37,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-teal-700 text-lg font-bold text-white">
-            MS
-          </div>
+          <img src="/pwa-192x192.png" alt="CNMG STOCKS" className="mx-auto mb-3 h-16 w-16 rounded-2xl object-cover shadow-sm" />
           <h1 className="text-2xl font-bold text-slate-900">Welcome back</h1>
           <p className="mt-1 text-sm text-slate-500">Sign in to CNMG STOCKS</p>
         </div>
