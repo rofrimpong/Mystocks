@@ -27,6 +27,8 @@ class StoreProductRequest extends FormRequest
             'barcode' => ['nullable', 'string', 'max:50'],
             'category_id' => ['nullable', 'uuid', 'exists:categories,id'],
             'preferred_supplier_id' => ['nullable', 'uuid', 'exists:suppliers,id'],
+            'branch_id' => ['nullable', 'uuid', 'exists:branches,id'],
+            'opening_quantity' => ['nullable', 'numeric', 'min:0', 'decimal:0,4'],
             'brand' => ['nullable', 'string', 'max:100'],
             'unit' => ['required', 'string', 'max:30', Rule::in([
                 'piece', 'box', 'carton', 'kilogram', 'gram', 'litre', 'metre', 'service', 'pack', 'dozen',

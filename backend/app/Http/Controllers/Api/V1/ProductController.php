@@ -8,6 +8,8 @@ use App\Http\Requests\Product\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Business;
 use App\Models\Product;
+use App\Services\InventoryService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -78,7 +80,48 @@ class ProductController extends Controller
             return response()->json(['message' => 'Supplier does not belong to this business.'], 422);
         }
 
-        $product = Product::create($data);
+        $branchId = $data['branch_id'] ?? null;
+        $openingQuantity = $data['opening_quantity'] ?? 0;
+
+        unset($data['branch_id'], $data['opening_quantity']);
+
+        if ((float) $openingQuantity > 0) {
+            if (! $branchId) {
+                return response()->json([
+                    'message' => 'A branch is required when recording opening stock.',
+                ], 422);
+            }
+
+            if (! $business->branches()->where('id', $branchId)->exists()) {
+                return response()->json([
+                    'message' => 'Branch does not belong to this business.',
+                ], 422);
+            }
+        }
+
+        $product = DB::transaction(function () use (
+            $data,
+            $business,
+            $branchId,
+            $openingQuantity,
+            $request
+        ) {
+            $product = Product::create($data);
+
+            if ((float) $openingQuantity > 0) {
+                app(InventoryService::class)->openingStock(
+                    $business->id,
+                    $branchId,
+                    $product->id,
+                    $openingQuantity,
+                    $product->buying_price,
+                    $request->user()?->id,
+                    'Opening stock entered when product was created'
+                );
+            }
+
+            return $product;
+        });
 
         return response()->json([
             'message' => 'Product created successfully.',
