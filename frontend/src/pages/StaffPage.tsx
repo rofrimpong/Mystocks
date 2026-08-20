@@ -210,14 +210,20 @@ export default function StaffPage() {
       )}
 
       {show && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 p-4 pb-24 sm:flex sm:items-center sm:justify-center sm:pb-4">
           <form
             onSubmit={submit}
-            className="max-h-[90vh] w-full max-w-lg overflow-auto rounded-2xl bg-white p-5 shadow-xl"
+            className="mx-auto w-full max-w-lg rounded-2xl bg-white p-5 pb-8 shadow-xl sm:my-auto"
           >
             <h2 className="text-lg font-bold text-slate-900">
               Add Staff
             </h2>
+
+            {message && (
+              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                {message}
+              </div>
+            )}
 
             <div className="mt-4 grid gap-3">
               <input
