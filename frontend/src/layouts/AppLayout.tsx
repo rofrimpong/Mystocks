@@ -36,8 +36,61 @@ const baseNavItems = [
 ];
 
 export default function AppLayout() {
-  const { user, logout } = useAuthStore();
-  const navItems = user?.is_platform_admin ? [...baseNavItems, { to: '/admin', icon: ShieldCheck, label: 'Admin' }] : baseNavItems;
+  const {
+    user,
+    logout,
+    currentBusinessRole,
+    isBusinessOwner,
+  } = useAuthStore();
+
+  const allowedPathsByRole: Record<string, string[]> = {
+    manager: [
+      '/',
+      '/sales',
+      '/products',
+      '/inventory',
+      '/staff',
+      '/customers',
+      '/suppliers',
+      '/expenses',
+      '/reports',
+      '/settings',
+    ],
+    cashier: [
+      '/',
+      '/sales',
+      '/products',
+      '/inventory',
+      '/customers',
+      '/settings',
+    ],
+    salesperson: [
+      '/',
+      '/sales',
+      '/products',
+      '/inventory',
+      '/customers',
+      '/settings',
+    ],
+    inventory_officer: [
+      '/',
+      '/products',
+      '/inventory',
+      '/suppliers',
+      '/settings',
+    ],
+  };
+
+  const roleFilteredNav =
+    isBusinessOwner || !currentBusinessRole || currentBusinessRole === 'owner'
+      ? baseNavItems
+      : baseNavItems.filter((item) =>
+          (allowedPathsByRole[currentBusinessRole] || []).includes(item.to)
+        );
+
+  const navItems = user?.is_platform_admin
+    ? [...roleFilteredNav, { to: '/admin', icon: ShieldCheck, label: 'Admin' }]
+    : roleFilteredNav;
   const { isOnline, isSyncing, pendingCount, setOnline, syncAll } = useOfflineStore();
   const navigate = useNavigate();
   const pending = pendingCount();
@@ -159,16 +212,15 @@ export default function AppLayout() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="grid grid-cols-3 gap-2">
-                {[
-                  { to: '/staff', icon: UserCog, label: 'Staff' },
-                  { to: '/customers', icon: Users, label: 'Customers' },
-                  { to: '/suppliers', icon: Truck, label: 'Suppliers' },
-                  { to: '/expenses', icon: Receipt, label: 'Expenses' },
-                  { to: '/reports', icon: BarChart3, label: 'Reports' },
-                  ...(user?.is_platform_admin
-                    ? [{ to: '/admin', icon: ShieldCheck, label: 'Admin' }]
-                    : []),
-                ].map((item) => (
+                {navItems
+                  .filter(
+                    (item) =>
+                      item.to !== '/settings' &&
+                      !navItems
+                        .slice(0, 4)
+                        .some((primary) => primary.to === item.to)
+                  )
+                  .map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}

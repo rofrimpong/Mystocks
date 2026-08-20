@@ -15,6 +15,7 @@ export interface Business {
   currency: string;
   status: string;
   is_owner?: boolean;
+  role?: 'owner' | 'manager' | 'cashier' | 'salesperson' | 'inventory_officer' | 'staff';
   branch_id?: string | null;
   trial_ends_at?: string | null;
 }

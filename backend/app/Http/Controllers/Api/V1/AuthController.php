@@ -146,6 +146,7 @@ class AuthController extends Controller
                 'currency' => $b->currency,
                 'status' => $b->status,
                 'is_owner' => (bool) $b->pivot->is_owner,
+                'role' => $b->pivot->is_owner ? 'owner' : ($b->pivot->role ?? 'staff'),
                 'branch_id' => $b->pivot->branch_id,
             ]);
 
@@ -201,6 +202,7 @@ class AuthController extends Controller
                 'currency' => $b->currency,
                 'status' => $b->status,
                 'is_owner' => (bool) $b->pivot->is_owner,
+                'role' => $b->pivot->is_owner ? 'owner' : ($b->pivot->role ?? 'staff'),
                 'branch_id' => $b->pivot->branch_id,
             ]);
 
