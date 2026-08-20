@@ -145,7 +145,7 @@ export default function SalesPage() {
 
       const sale = await createSale(payload);
       setLastSale(sale);
-      setMessage({ type: 'success', text: `Sale completed — GHS ${money(subtotal)}` });
+      setMessage({ type: 'success', text: `Sale completed · ${sale.sale_number} · GHS ${money(subtotal)}` });
       setCart([]);
       setShowCart(false);
       // Opportunistic sync of any pending offline ops
