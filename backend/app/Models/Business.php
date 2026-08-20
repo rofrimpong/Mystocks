@@ -26,6 +26,7 @@ class Business extends Model
         'timezone',
         'logo_path',
         'status',
+        'plan',
         'allow_negative_stock',
         'multi_branch_enabled',
         'settings',
@@ -87,5 +88,46 @@ class Business extends Model
     public function isActive(): bool
     {
         return in_array($this->status, ['active', 'trial'], true);
+    }
+
+    public function planLimits(): array
+    {
+        return match ($this->plan ?? 'trial') {
+            'basic' => [
+                'branches' => 1,
+                'users' => 3,
+                'products' => 500,
+            ],
+            'pro' => [
+                'branches' => 5,
+                'users' => 15,
+                'products' => 5000,
+            ],
+            'enterprise' => [
+                'branches' => null,
+                'users' => null,
+                'products' => null,
+            ],
+            default => [
+                'branches' => 1,
+                'users' => 2,
+                'products' => 100,
+            ],
+        };
+    }
+
+    public function branchLimit(): ?int
+    {
+        return $this->planLimits()['branches'];
+    }
+
+    public function userLimit(): ?int
+    {
+        return $this->planLimits()['users'];
+    }
+
+    public function productLimit(): ?int
+    {
+        return $this->planLimits()['products'];
     }
 }

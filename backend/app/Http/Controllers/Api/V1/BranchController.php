@@ -56,9 +56,23 @@ class BranchController extends Controller
             ], 403);
         }
 
-        // Subscription / plan check can be added later
-        if (! $business->multi_branch_enabled) {
-            // Still allow creation but warn; enforcement can be stricter later
+        $branchLimit = $business->branchLimit();
+
+        if ($branchLimit !== null) {
+            $activeBranches = $business->branches()
+                ->where('status', 'active')
+                ->count();
+
+            if ($activeBranches >= $branchLimit) {
+                return response()->json([
+                    'message' => sprintf(
+                        'Your %s plan allows a maximum of %d active branch%s.',
+                        ucfirst($business->plan ?? 'trial'),
+                        $branchLimit,
+                        $branchLimit === 1 ? '' : 'es'
+                    ),
+                ], 422);
+            }
         }
 
         $data = $request->validated();

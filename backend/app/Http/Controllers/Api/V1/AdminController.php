@@ -60,7 +60,10 @@ class AdminController extends Controller
     public function updateBusiness(Request $request, string $id): JsonResponse
     {
         $this->guard($request);
-        $data=$request->validate(['status'=>['required', Rule::in(['active','suspended','trial','cancelled'])]]);
+        $data=$request->validate([
+            'status'=>['sometimes', Rule::in(['active','suspended','trial','cancelled'])],
+            'plan'=>['sometimes', Rule::in(['trial','basic','pro','enterprise'])],
+        ]);
         $business=Business::findOrFail($id); $business->update($data);
         return response()->json(['message'=>'Business updated.','data'=>$business->fresh()]);
     }
