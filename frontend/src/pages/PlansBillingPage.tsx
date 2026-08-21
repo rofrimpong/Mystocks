@@ -6,7 +6,7 @@ import type { Business } from '../types';
 import { useAuthStore } from '../stores/authStore';
 
 export default function PlansBillingPage() {
-  const { businesses, currentBusinessId } = useAuthStore();
+  const { businesses, currentBusinessId, currentBusinessRole, isBusinessOwner, user } = useAuthStore();
 
   const [plans, setPlans] = useState<AdminPlan[]>([]);
   const [liveBusiness, setLiveBusiness] = useState<Business | null>(null);
@@ -22,6 +22,7 @@ export default function PlansBillingPage() {
 
   const currentBusiness = liveBusiness || cachedBusiness;
   const currentPlan = currentBusiness?.plan || 'free';
+  const canManageBilling = !!user?.is_platform_admin || isBusinessOwner || currentBusinessRole === 'owner';
 
   const refreshBusiness = async () => {
     const result = await fetchCurrentBusiness();
@@ -170,6 +171,13 @@ export default function PlansBillingPage() {
           {currentBusiness?.name || 'Your business'}
         </div>
       </section>
+      {!canManageBilling && (
+        <section className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <div className="text-sm font-semibold text-amber-900">Billing is managed by the business owner</div>
+          <p className="mt-1 text-xs leading-5 text-amber-800">You can compare plans and prices here, but only the business owner can change the subscription.</p>
+        </section>
+      )}
+
 
       <div className="flex rounded-xl bg-slate-100 p-1">
         <button
@@ -285,7 +293,7 @@ export default function PlansBillingPage() {
                 </div>
               </div>
 
-              {isSelected && !isCurrent && !isEnterprise && (
+              {canManageBilling && isSelected && !isCurrent && !isEnterprise && (
                 <div className="mt-4 rounded-xl border border-teal-200 bg-teal-50 p-4">
                   <div className="font-bold text-teal-900">Confirm upgrade</div>
                   <p className="mt-1 text-sm text-teal-800">
@@ -316,7 +324,15 @@ export default function PlansBillingPage() {
                 </div>
               )}
 
-              {isCurrent ? (
+              {!canManageBilling ? (
+                <button
+                  type="button"
+                  disabled
+                  className="mt-4 w-full rounded-lg bg-slate-100 py-2.5 text-sm font-semibold text-slate-500"
+                >
+                  {isCurrent ? 'Current Plan' : 'Owner access required'}
+                </button>
+              ) : isCurrent ? (
                 <button
                   type="button"
                   disabled
