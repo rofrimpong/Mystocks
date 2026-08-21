@@ -8,6 +8,7 @@ export default function PlansBillingPage() {
   const [plans, setPlans] = useState<AdminPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
+  const [selectedPlan, setSelectedPlan] = useState<AdminPlan | null>(null);
   const [message, setMessage] = useState('');
 
   const currentBusiness = useMemo(() => businesses.find((b) => b.id === currentBusinessId) || businesses[0], [businesses, currentBusinessId]);
@@ -39,8 +40,7 @@ export default function PlansBillingPage() {
       {message && <div className="rounded-lg bg-slate-100 px-4 py-3 text-sm text-slate-700">{message}</div>}
       <div className="space-y-4">
         {plans.map((plan) => {
-          const isCurrent = plan.slug === currentPlan;
-          const price = billing === 'monthly' ? Number(plan.price_monthly) : Number(plan.price_yearly);
+          const price = Number(billing === 'yearly' ? plan.price_yearly : plan.price_monthly);
           return (
             <section key={plan.id} className={`rounded-xl border bg-white p-5 shadow-sm ${plan.slug === 'business' ? 'border-teal-400' : 'border-slate-200'}`}>
               <div className="flex items-start justify-between gap-3">
@@ -60,7 +60,19 @@ export default function PlansBillingPage() {
                 <div className="rounded-lg bg-slate-50 p-2"><div className="text-xs text-slate-500">Users</div><div className="mt-1 text-sm font-bold text-slate-900">{plan.max_users ?? 'Unlimited'}</div></div>
                 <div className="rounded-lg bg-slate-50 p-2"><div className="text-xs text-slate-500">Branches</div><div className="mt-1 text-sm font-bold text-slate-900">{plan.max_branches ?? 'Unlimited'}</div></div>
               </div>
-              {isCurrent ? <button type="button" disabled className="mt-4 w-full rounded-lg bg-slate-100 py-2.5 text-sm font-semibold text-slate-500">Current Plan</button> : plan.slug === 'enterprise' ? <button type="button" onClick={() => setMessage('Enterprise subscriptions will be handled through CNMG Technologies support.')} className="mt-4 w-full rounded-lg border border-teal-700 py-2.5 text-sm font-semibold text-teal-700">Contact us</button> : <button type="button" onClick={() => setMessage('Payment activation is the next step. Your selected plan is ' + plan.name + '.')} className="mt-4 w-full rounded-lg bg-teal-700 py-2.5 text-sm font-semibold text-white">Upgrade to {plan.name}</button>}
+              {selectedPlan?.id === plan.id && (
+                <div className="mt-4 rounded-xl border border-teal-200 bg-teal-50 p-4">
+                  <div className="font-bold text-teal-900">Confirm upgrade</div>
+                  <p className="mt-1 text-sm text-teal-800">
+                    {plan.name} · GHS {Number(billing === 'yearly' ? plan.price_yearly : plan.price_monthly).toLocaleString()} / {billing === 'yearly' ? 'year' : 'month'}
+                  </p>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <button type="button" onClick={() => setSelectedPlan(null)} className="rounded-lg border border-slate-300 bg-white py-2.5 text-sm font-semibold text-slate-700">Cancel</button>
+                    <button type="button" onClick={() => setMessage('Payment checkout for ' + plan.name + ' is ready for integration.')} className="rounded-lg bg-teal-700 py-2.5 text-sm font-semibold text-white">Continue to payment</button>
+                  </div>
+                </div>
+              )}
+              {isCurrent ? <button type="button" disabled className="mt-4 w-full rounded-lg bg-slate-100 py-2.5 text-sm font-semibold text-slate-500">Current Plan</button> : plan.slug === 'enterprise' ? <button type="button" onClick={() => setMessage('Enterprise subscriptions will be handled through CNMG Technologies support.')} className="mt-4 w-full rounded-lg border border-teal-700 py-2.5 text-sm font-semibold text-teal-700">Contact us</button> : <button type="button" onClick={() => setSelectedPlan(plan)} className="mt-4 w-full rounded-lg bg-teal-700 py-2.5 text-sm font-semibold text-white">Upgrade to {plan.name}</button>}
             </section>
           );
         })}
