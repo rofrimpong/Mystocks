@@ -40,6 +40,7 @@ export default function PlansBillingPage() {
       {message && <div className="rounded-lg bg-slate-100 px-4 py-3 text-sm text-slate-700">{message}</div>}
       <div className="space-y-4">
         {plans.map((plan) => {
+            const isCurrent = plan.slug === currentPlan;
           const price = Number(billing === 'yearly' ? plan.price_yearly : plan.price_monthly);
           return (
             <section key={plan.id} className={`rounded-xl border bg-white p-5 shadow-sm ${plan.slug === 'business' ? 'border-teal-400' : 'border-slate-200'}`}>
