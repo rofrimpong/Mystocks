@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Business extends Model
 {
@@ -89,42 +90,28 @@ class Business extends Model
     {
         return in_array($this->status, ['active', 'trial'], true);
     }
-
     public function planLimits(): array
     {
-        return match ($this->plan ?? 'free') {
-            'free' => [
+        $plan = DB::table('plans')
+            ->where('slug', $this->plan ?? 'free')
+            ->where('is_active', true)
+            ->first();
+
+        if (! $plan) {
+            return [
                 'branches' => 1,
                 'users' => 1,
                 'products' => 50,
-            ],
-            'starter' => [
-                'branches' => 1,
-                'users' => 2,
-                'products' => 500,
-            ],
-            'business' => [
-                'branches' => 3,
-                'users' => 5,
-                'products' => null,
-            ],
-            'pro' => [
-                'branches' => 10,
-                'users' => 15,
-                'products' => null,
-            ],
-            'enterprise' => [
-                'branches' => null,
-                'users' => null,
-                'products' => null,
-            ],
-            default => [
-                'branches' => 1,
-                'users' => 1,
-                'products' => 50,
-            ],
-        };
+            ];
+        }
+
+        return [
+            'branches' => $plan->max_branches !== null ? (int) $plan->max_branches : null,
+            'users' => $plan->max_users !== null ? (int) $plan->max_users : null,
+            'products' => $plan->max_products !== null ? (int) $plan->max_products : null,
+        ];
     }
+
 
     public function branchLimit(): ?int
     {
