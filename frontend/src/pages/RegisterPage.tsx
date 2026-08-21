@@ -51,7 +51,7 @@ export default function RegisterPage() {
         <div className="mb-6 text-center">
           <img src="/pwa-192x192.png" alt="CNMG STOCKS" className="mx-auto mb-3 h-16 w-16 rounded-2xl object-cover shadow-sm" />
           <h1 className="text-2xl font-bold text-slate-900">Start your business</h1>
-          <p className="mt-1 text-sm text-slate-500">14-day free trial • Ghana-ready</p>
+          <p className="mt-1 text-sm text-slate-500">Free plan • Ghana-ready</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -75,7 +75,8 @@ export default function RegisterPage() {
             className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
           />
           <input
-            placeholder="Phone (optional)"
+            required
+            placeholder="Phone number"
             value={form.phone}
             onChange={(e) => update('phone', e.target.value)}
             className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"

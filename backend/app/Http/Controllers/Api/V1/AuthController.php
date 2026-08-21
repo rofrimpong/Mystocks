@@ -35,7 +35,7 @@ class AuthController extends Controller
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
-                'phone' => $data['phone'] ?? null,
+                'phone' => $data['phone'],
                 'password' => $data['password'],
                 'locale' => $data['locale'] ?? 'en',
                 'timezone' => $data['timezone'] ?? 'Africa/Accra',
