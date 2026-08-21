@@ -23,6 +23,7 @@ class BusinessResource extends JsonResource
             'timezone' => $this->timezone,
             'logo_path' => $this->logo_path,
             'status' => $this->status,
+            'plan' => $this->plan ?? 'free',
             'allow_negative_stock' => (bool) $this->allow_negative_stock,
             'multi_branch_enabled' => (bool) $this->multi_branch_enabled,
             'settings' => $this->settings,

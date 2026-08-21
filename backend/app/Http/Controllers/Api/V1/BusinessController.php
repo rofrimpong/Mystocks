@@ -8,6 +8,7 @@ use App\Http\Resources\BusinessResource;
 use App\Models\Business;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BusinessController extends Controller
 {
@@ -116,4 +117,14 @@ class BusinessController extends Controller
 
         return $business;
     }
+    public function plans(Request $request): JsonResponse
+    {
+        $plans = DB::table('plans')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+
+        return response()->json(['data' => $plans]);
+    }
+
 }

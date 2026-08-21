@@ -16,6 +16,7 @@ import SettingsPage from './pages/SettingsPage';
 import ProfilePage from './pages/ProfilePage';
 import StaffPage from './pages/StaffPage';
 import AdminPage from './pages/AdminPage';
+import PlansBillingPage from './pages/PlansBillingPage';
 
 function AdminGate({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore();
@@ -67,6 +68,7 @@ export default function App() {
         <Route path="reports" element={<ReportsPage />} />
         <Route path="staff" element={<StaffPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="plans-billing" element={<PlansBillingPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="admin" element={<AdminGate><AdminPage /></AdminGate>} />
       </Route>

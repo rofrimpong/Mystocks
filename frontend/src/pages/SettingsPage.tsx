@@ -247,6 +247,19 @@ export default function SettingsPage() {
         </form>
       </section>
 
+      {/* Plans & Billing */}
+      <section className="rounded-xl bg-white p-5 shadow-sm">
+        <div className="text-sm font-semibold text-slate-700">Plans & Billing</div>
+        <p className="mt-1 text-xs text-slate-500">View your current plan, compare pricing and upgrade your business.</p>
+        <button
+          type="button"
+          onClick={() => navigate("/plans-billing")}
+          className="mt-3 w-full rounded-lg bg-teal-700 py-2.5 text-sm font-semibold text-white"
+        >
+          View plans
+        </button>
+      </section>
+
       <button
         onClick={handleLogout}
         className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-medium text-slate-700 shadow-sm"
