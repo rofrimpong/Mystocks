@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use IlluminateSupportFacadesStorage;
 use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
@@ -27,5 +28,24 @@ class ProfileController extends Controller
         ]);
         $user->update($data);
         return response()->json(['message' => 'Profile updated successfully.', 'data' => new UserResource($user->fresh())]);
+    }
+    public function uploadAvatar(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $request->validate([
+            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+        ]);
+
+        $oldPath = $user->avatar_path;
+        $path = $request->file('image')->store('avatars/'.$user->id, 'public');
+        $user->update(['avatar_path' => $path]);
+        if ($oldPath && $oldPath !== $path) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        return response()->json([
+            'message' => 'Profile photo uploaded successfully.',
+            'data' => new UserResource($user->fresh()),
+        ]);
     }
 }

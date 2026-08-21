@@ -25,6 +25,7 @@ class User extends Authenticatable
         'is_active',
         'locale',
         'timezone',
+        'avatar_path',
         'email_verified_at',
         'phone_verified_at',
     ];

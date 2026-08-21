@@ -170,7 +170,7 @@ export default function AppLayout() {
 
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/profile')} className="flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700" title="Profile">
-              <UserCircle className="h-4 w-4" />
+              {user?.avatar_url ? <img src={user.avatar_url} alt={user.name} className="h-6 w-6 rounded-full object-cover" /> : <UserCircle className="h-4 w-4" />}
               <span className="hidden sm:inline">Profile</span>
             </button>
             {/* Online / Offline indicator */}

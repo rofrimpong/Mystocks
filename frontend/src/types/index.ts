@@ -7,6 +7,8 @@ export interface User {
   is_active: boolean;
   locale: string;
   timezone: string;
+  avatar_path?: string | null;
+  avatar_url?: string | null;
 }
 
 export interface Business {
