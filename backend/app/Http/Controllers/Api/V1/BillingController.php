@@ -60,6 +60,7 @@ class BillingController extends Controller
                 'business_id' => $business->id,
                 'plan_slug' => $plan->slug,
                 'billing_cycle' => $data['billing_cycle'],
+                'cancel_action' => config('services.paystack.cancel_url'),
             ],
         ]);
 

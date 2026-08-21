@@ -58,9 +58,23 @@ export default function PlansBillingPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const paymentState = params.get('payment');
     const reference = params.get('reference') || params.get('trxref');
 
-    if (!reference) return;
+    if (paymentState === 'cancelled') {
+      localStorage.removeItem('mystocks_payment_reference');
+      setProcessingPlanId(null);
+      setSelectedPlan(null);
+      setError('');
+      setMessage('Payment cancelled. No charge was made.');
+      window.history.replaceState({}, document.title, '/plans-billing');
+      return;
+    }
+
+    if (! reference) {
+      setProcessingPlanId(null);
+      return;
+    }
 
     setProcessingPlanId('verifying');
     setMessage('Verifying your payment…');
