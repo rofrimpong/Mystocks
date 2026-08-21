@@ -10,6 +10,7 @@ export default function PlansBillingPage() {
 
   const [plans, setPlans] = useState<AdminPlan[]>([]);
   const [liveBusiness, setLiveBusiness] = useState<Business | null>(null);
+  const [liveIsOwner, setLiveIsOwner] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedPlan, setSelectedPlan] = useState<AdminPlan | null>(null);
@@ -22,11 +23,12 @@ export default function PlansBillingPage() {
 
   const currentBusiness = liveBusiness || cachedBusiness;
   const currentPlan = currentBusiness?.plan || 'free';
-  const canManageBilling = !!user?.is_platform_admin || isBusinessOwner || currentBusinessRole === 'owner';
+  const canManageBilling = !!user?.is_platform_admin || liveIsOwner === true || (liveIsOwner === null && (isBusinessOwner || currentBusinessRole === 'owner'));
 
   const refreshBusiness = async () => {
     const result = await fetchCurrentBusiness();
     setLiveBusiness(result.data);
+    setLiveIsOwner(result.meta?.is_owner === true);
 
     useAuthStore.setState((state) => ({
       businesses: state.businesses.map((business) =>
@@ -44,6 +46,7 @@ export default function PlansBillingPage() {
       .then(([planList, businessResult]) => {
         setPlans(planList);
         setLiveBusiness(businessResult.data);
+        setLiveIsOwner(businessResult.meta?.is_owner === true);
 
         useAuthStore.setState((state) => ({
           businesses: state.businesses.map((business) =>

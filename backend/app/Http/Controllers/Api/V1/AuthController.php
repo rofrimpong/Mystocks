@@ -83,7 +83,7 @@ class AuthController extends Controller
         )->plainTextToken;
 
         return response()->json([
-            'message' => 'Registration successful. Business created and trial started.',
+            'message' => 'Registration successful. Business created on the Free plan.',
             'data' => [
                 'user' => new UserResource($result['user']),
                 'business' => [
