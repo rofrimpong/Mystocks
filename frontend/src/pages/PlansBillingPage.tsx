@@ -16,6 +16,12 @@ export default function PlansBillingPage() {
   const currentPlan = currentBusiness?.plan || 'free';
 
   useEffect(() => {
+    fetchPlans()
+      .then(setPlans)
+      .catch(() => setMessage("Could not load pricing plans."))
+      .finally(() => setLoading(false));
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const reference = params.get("reference") || localStorage.getItem("mystocks_payment_reference");
@@ -35,7 +41,6 @@ export default function PlansBillingPage() {
       .finally(() => setProcessing(false));
   }, []);
 
-    fetchPlans().then(setPlans).catch(() => setMessage('Could not load pricing plans.')).finally(() => setLoading(false));
   const startPayment = async (plan: AdminPlan) => {
     setProcessing(true);
     setMessage("");
@@ -49,7 +54,6 @@ export default function PlansBillingPage() {
     }
   };
 
-  }, []);
 
   if (loading) {
     return <div className="py-16 text-center text-slate-500">Loading plans…</div>;
