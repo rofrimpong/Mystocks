@@ -74,7 +74,7 @@ class ProductController extends Controller
                 return response()->json([
                     'message' => sprintf(
                         'Your %s plan allows a maximum of %d products.',
-                        ucfirst($business->plan ?? 'trial'),
+                        ucfirst($business->plan ?? 'free'),
                         $productLimit
                     ),
                 ], 422);

@@ -68,7 +68,7 @@ class StaffController extends Controller
                 return response()->json([
                     'message' => sprintf(
                         'Your %s plan allows a maximum of %d active users.',
-                        ucfirst($business->plan ?? 'trial'),
+                        ucfirst($business->plan ?? 'free'),
                         $userLimit
                     ),
                 ], 422);
@@ -189,7 +189,7 @@ class StaffController extends Controller
                 return response()->json([
                     'message' => sprintf(
                         'Your %s plan allows a maximum of %d active users.',
-                        ucfirst($business->plan ?? 'trial'),
+                        ucfirst($business->plan ?? 'free'),
                         $userLimit
                     ),
                 ], 422);

@@ -48,8 +48,9 @@ class AuthController extends Controller
                 'country' => $data['country'] ?? 'GH',
                 'currency' => $data['currency'] ?? 'GHS',
                 'timezone' => $data['timezone'] ?? 'Africa/Accra',
-                'status' => 'trial',
-                'trial_ends_at' => now()->addDays(14),
+                'status' => 'active',
+                'plan' => 'free',
+                'trial_ends_at' => null,
                 'multi_branch_enabled' => false,
             ]);
 

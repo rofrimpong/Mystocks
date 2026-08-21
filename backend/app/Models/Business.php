@@ -92,16 +92,26 @@ class Business extends Model
 
     public function planLimits(): array
     {
-        return match ($this->plan ?? 'trial') {
-            'basic' => [
+        return match ($this->plan ?? 'free') {
+            'free' => [
                 'branches' => 1,
-                'users' => 3,
+                'users' => 1,
+                'products' => 50,
+            ],
+            'starter' => [
+                'branches' => 1,
+                'users' => 2,
                 'products' => 500,
             ],
+            'business' => [
+                'branches' => 3,
+                'users' => 5,
+                'products' => null,
+            ],
             'pro' => [
-                'branches' => 5,
+                'branches' => 10,
                 'users' => 15,
-                'products' => 5000,
+                'products' => null,
             ],
             'enterprise' => [
                 'branches' => null,
@@ -110,8 +120,8 @@ class Business extends Model
             ],
             default => [
                 'branches' => 1,
-                'users' => 2,
-                'products' => 100,
+                'users' => 1,
+                'products' => 50,
             ],
         };
     }

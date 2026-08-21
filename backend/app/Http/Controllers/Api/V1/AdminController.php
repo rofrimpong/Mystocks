@@ -8,6 +8,7 @@ use App\Models\Business;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
@@ -62,9 +63,39 @@ class AdminController extends Controller
         $this->guard($request);
         $data=$request->validate([
             'status'=>['sometimes', Rule::in(['active','suspended','trial','cancelled'])],
-            'plan'=>['sometimes', Rule::in(['trial','basic','pro','enterprise'])],
+            'plan'=>['sometimes', Rule::in(['free','starter','business','pro','enterprise'])],
         ]);
         $business=Business::findOrFail($id); $business->update($data);
         return response()->json(['message'=>'Business updated.','data'=>$business->fresh()]);
     }
+    public function plans(Request $request): JsonResponse
+    {
+        $this->guard($request);
+        $plans = DB::table('plans')->orderBy('sort_order')->get();
+        return response()->json(['data' => $plans]);
+    }
+
+    public function updatePlan(Request $request, string $id): JsonResponse
+    {
+        $this->guard($request);
+        $data = $request->validate([
+            'name' => ['sometimes', 'string', 'max:100'],
+            'description' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'price_monthly' => ['sometimes', 'numeric', 'min:0'],
+            'price_yearly' => ['sometimes', 'numeric', 'min:0'],
+            'max_products' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'max_users' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'max_branches' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'has_reports' => ['sometimes', 'boolean'],
+            'has_multi_branch' => ['sometimes', 'boolean'],
+            'has_api_access' => ['sometimes', 'boolean'],
+            'has_priority_support' => ['sometimes', 'boolean'],
+            'is_active' => ['sometimes', 'boolean'],
+        ]);
+        $plan = DB::table('plans')->where('id', $id)->first();
+        abort_unless($plan, 404, 'Pricing plan not found.');
+        DB::table('plans')->where('id', $id)->update(array_merge($data, ['updated_at' => now()]));
+        return response()->json(['message' => 'Pricing plan updated.', 'data' => DB::table('plans')->where('id', $id)->first()]);
+    }
+
 }

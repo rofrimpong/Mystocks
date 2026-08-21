@@ -52,6 +52,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::patch('/users/{id}', [AdminController::class, 'updateUser']);
         Route::get('/businesses', [AdminController::class, 'businesses']);
         Route::patch('/businesses/{id}', [AdminController::class, 'updateBusiness']);
+        Route::get('/plans', [AdminController::class, 'plans']);
+        Route::patch('/plans/{id}', [AdminController::class, 'updatePlan']);
     });
     Route::get('/businesses', [BusinessController::class, 'index']);
     Route::get('/businesses/{id}', [BusinessController::class, 'show']);

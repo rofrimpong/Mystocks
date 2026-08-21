@@ -67,7 +67,7 @@ class BranchController extends Controller
                 return response()->json([
                     'message' => sprintf(
                         'Your %s plan allows a maximum of %d active branch%s.',
-                        ucfirst($business->plan ?? 'trial'),
+                        ucfirst($business->plan ?? 'free'),
                         $branchLimit,
                         $branchLimit === 1 ? '' : 'es'
                     ),
