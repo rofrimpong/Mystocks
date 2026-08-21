@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchPlans, initializeBilling, verifyBilling } from '../services/plans';
+import { fetchCurrentBusiness } from '../services/business';
 import type { AdminPlan } from '../services/admin';
 import { useAuthStore } from '../stores/authStore';
 
@@ -10,15 +11,20 @@ export default function PlansBillingPage() {
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedPlan, setSelectedPlan] = useState<AdminPlan | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [liveBusiness, setLiveBusiness] = useState<any>(null);
   const [message, setMessage] = useState('');
 
-  const currentBusiness = useMemo(() => businesses.find((b) => b.id === currentBusinessId) || businesses[0], [businesses, currentBusinessId]);
-  const currentPlan = currentBusiness?.plan || 'free';
+  const cachedBusiness = useMemo(() => businesses.find((b) => b.id === currentBusinessId) || businesses[0], [businesses, currentBusinessId]);
+  const currentBusiness = liveBusiness || cachedBusiness;
+  const currentPlan = currentBusiness?.plan || "free";
 
   useEffect(() => {
-    fetchPlans()
-      .then(setPlans)
-      .catch(() => setMessage("Could not load pricing plans."))
+    Promise.all([fetchPlans(), fetchCurrentBusiness()])
+      .then(([planList, businessResult]) => {
+        setPlans(planList);
+        setLiveBusiness(businessResult.data);
+      })
+      .catch(() => setMessage("Could not load pricing or business information."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -29,11 +35,12 @@ export default function PlansBillingPage() {
 
     setProcessing(true);
     verifyBilling(reference)
-      .then((result) => {
+      .then(async (result) => {
         localStorage.removeItem("mystocks_payment_reference");
         setMessage(result.message || "Payment verified successfully.");
         window.history.replaceState({}, document.title, "/plans-billing");
-        setTimeout(() => window.location.reload(), 1200);
+        const freshBusiness = await fetchCurrentBusiness();
+        setLiveBusiness(freshBusiness.data);
       })
       .catch((err: any) => {
         setMessage(err?.response?.data?.message || "Could not verify payment.");
