@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\PurchaseController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SaleController;
 use App\Http\Controllers\Api\V1\StaffController;
+use App\Http\Controllers\Api\V1\BillingController;
 use App\Http\Controllers\Api\V1\SupplierController;
 use App\Http\Controllers\Api\V1\SyncController;
 use Illuminate\Support\Facades\Route;
@@ -61,6 +62,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/businesses/{id}', [BusinessController::class, 'update']);
 
     Route::middleware('business')->group(function () {
+        Route::post('/billing/initialize', [BillingController::class, 'initialize']);
+        Route::post('/billing/verify', [BillingController::class, 'verify']);
         Route::get('/business/current', [BusinessController::class, 'current']);
 
         Route::get('/branches', [BranchController::class, 'index']);

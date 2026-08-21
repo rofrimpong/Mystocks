@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchPlans } from '../services/plans';
+import { fetchPlans, initializeBilling, verifyBilling } from '../services/plans';
 import type { AdminPlan } from '../services/admin';
 import { useAuthStore } from '../stores/authStore';
 
@@ -9,13 +9,46 @@ export default function PlansBillingPage() {
   const [loading, setLoading] = useState(true);
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedPlan, setSelectedPlan] = useState<AdminPlan | null>(null);
+  const [processing, setProcessing] = useState(false);
   const [message, setMessage] = useState('');
 
   const currentBusiness = useMemo(() => businesses.find((b) => b.id === currentBusinessId) || businesses[0], [businesses, currentBusinessId]);
   const currentPlan = currentBusiness?.plan || 'free';
 
   useEffect(() => {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const reference = params.get("reference") || localStorage.getItem("mystocks_payment_reference");
+    if (!reference) return;
+
+    setProcessing(true);
+    verifyBilling(reference)
+      .then((result) => {
+        localStorage.removeItem("mystocks_payment_reference");
+        setMessage(result.message || "Payment verified successfully.");
+        window.history.replaceState({}, document.title, "/plans-billing");
+        setTimeout(() => window.location.reload(), 1200);
+      })
+      .catch((err: any) => {
+        setMessage(err?.response?.data?.message || "Could not verify payment.");
+      })
+      .finally(() => setProcessing(false));
+  }, []);
+
     fetchPlans().then(setPlans).catch(() => setMessage('Could not load pricing plans.')).finally(() => setLoading(false));
+  const startPayment = async (plan: AdminPlan) => {
+    setProcessing(true);
+    setMessage("");
+    try {
+      const result = await initializeBilling(plan.slug, billing);
+      localStorage.setItem("mystocks_payment_reference", result.reference);
+      window.location.href = result.authorization_url;
+    } catch (err: any) {
+      setMessage(err?.response?.data?.message || "Could not start payment.");
+      setProcessing(false);
+    }
+  };
+
   }, []);
 
   if (loading) {
@@ -69,7 +102,7 @@ export default function PlansBillingPage() {
                   </p>
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     <button type="button" onClick={() => setSelectedPlan(null)} className="rounded-lg border border-slate-300 bg-white py-2.5 text-sm font-semibold text-slate-700">Cancel</button>
-                    <button type="button" onClick={() => setMessage('Payment checkout for ' + plan.name + ' is ready for integration.')} className="rounded-lg bg-teal-700 py-2.5 text-sm font-semibold text-white">Continue to payment</button>
+                    <button type="button" onClick={() => void startPayment(plan)} className="rounded-lg bg-teal-700 py-2.5 text-sm font-semibold text-white">{processing ? 'Opening payment…' : 'Continue to payment'}</button>
                   </div>
                 </div>
               )}
