@@ -18,13 +18,11 @@ class BackfillReferralCodes extends Command
 
         User::query()
             ->whereNull('referral_code')
-            ->orderBy('created_at')
-            ->chunkById(100, function ($users) use ($referralService, &$updated) {
-                foreach ($users as $user) {
-                    $referralService->ensureUserHasCode($user);
-                    $updated++;
-                }
-            }, 'id');
+            ->lazy()
+            ->each(function (User $user) use ($referralService, &$updated) {
+                $referralService->ensureUserHasCode($user);
+                $updated++;
+            });
 
         $this->info("Referral codes generated for {$updated} user(s).");
 
