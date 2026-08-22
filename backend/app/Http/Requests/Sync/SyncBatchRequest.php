@@ -19,6 +19,8 @@ class SyncBatchRequest extends FormRequest
             'operations' => ['required', 'array', 'min:1', 'max:50'],
             'operations.*.idempotency_key' => ['required', 'string', 'max:100'],
             'operations.*.operation_type' => ['required', Rule::in(['sale', 'inventory_adjustment', 'opening_stock'])],
+            'operations.*.origin_business_id' => ['required', 'uuid'],
+            'operations.*.origin_user_id' => ['required', 'uuid'],
             'operations.*.payload' => ['required', 'array'],
             'operations.*.client_created_at' => ['nullable', 'date'],
         ];

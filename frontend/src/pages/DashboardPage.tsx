@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import type { DashboardData } from '../types';
-import { TrendingUp, Package, AlertTriangle, Wallet } from 'lucide-react';
+import { TrendingUp, Package, AlertTriangle, Wallet, HandCoins } from 'lucide-react';
 
 function formatMoney(value: string | number, currency = 'GHS') {
   const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -39,6 +39,13 @@ export default function DashboardPage() {
 
   const cards = [
     {
+      label: 'Customer Credit',
+      value: formatMoney(data.customer_credit?.outstanding || 0, currency),
+      sub: `${data.customer_credit?.customers || 0} customers owe`,
+      icon: HandCoins,
+      color: (data.customer_credit?.customers || 0) > 0 ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-600',
+    },
+    {
       label: "Today's Sales",
       value: formatMoney(data.today.revenue, currency),
       sub: `${data.today.sales_count} transactions`,
@@ -75,7 +82,7 @@ export default function DashboardPage() {
         <p className="text-sm text-slate-500">{data.business.name}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-4">
         {cards.map((card) => (
           <div key={card.label} className="rounded-xl bg-white p-4 shadow-sm">
             <div className={`mb-3 inline-flex rounded-lg p-2 ${card.color}`}>

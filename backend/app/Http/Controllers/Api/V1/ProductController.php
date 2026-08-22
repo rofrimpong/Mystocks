@@ -34,10 +34,10 @@ class ProductController extends Controller
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                    ->orWhere('sku', 'ilike', "%{$search}%")
-                    ->orWhere('barcode', 'ilike', "%{$search}%")
-                    ->orWhere('brand', 'ilike', "%{$search}%");
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%")
+                    ->orWhere('barcode', 'like', "%{$search}%")
+                    ->orWhere('brand', 'like', "%{$search}%");
             });
         }
 
@@ -68,7 +68,11 @@ class ProductController extends Controller
         $productLimit = $business->productLimit();
 
         if ($productLimit !== null) {
-            $activeProducts = $business->products()->count();
+            // A plan slot represents one active catalogue product/SKU.
+            // Archived or inactive products preserve history but do not consume a slot.
+            $activeProducts = $business->products()
+                ->where('is_active', true)
+                ->count();
 
             if ($activeProducts >= $productLimit) {
                 return response()->json([

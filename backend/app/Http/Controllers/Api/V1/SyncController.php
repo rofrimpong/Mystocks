@@ -30,6 +30,15 @@ class SyncController extends Controller
         $isOwner = $request->attributes->get('is_business_owner', false);
         $role = $request->attributes->get('business_role');
 
+        foreach ($data['operations'] as $operation) {
+            if ((string) $operation['origin_business_id'] !== (string) $business->id
+                || (string) $operation['origin_user_id'] !== (string) $user->id) {
+                return response()->json([
+                    'message' => 'An offline operation belongs to a different business or user.',
+                ], 422);
+            }
+        }
+
         if (! $user->isPlatformAdmin() && ! $isOwner) {
             $allowedByType = [
                 'sale' => ['manager', 'cashier', 'salesperson'],

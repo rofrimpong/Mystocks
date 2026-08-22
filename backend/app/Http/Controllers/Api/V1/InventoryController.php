@@ -61,9 +61,9 @@ class InventoryController extends Controller
 
         if ($search = $request->input('search')) {
             $query->whereHas('product', function ($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                    ->orWhere('sku', 'ilike', "%{$search}%")
-                    ->orWhere('barcode', 'ilike', "%{$search}%");
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%")
+                    ->orWhere('barcode', 'like', "%{$search}%");
             });
         }
 

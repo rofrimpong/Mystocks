@@ -34,7 +34,9 @@ class EnsureBusinessAccess
                     return response()->json(['message' => 'Business not found.'], 404);
                 }
                 $request->attributes->set('current_business', $business);
-                $this->setBranchIfProvided($request, $business);
+                if ($response = $this->setBranchIfProvided($request, $business)) {
+                    return $response;
+                }
             }
 
             return $next($request);
@@ -86,12 +88,14 @@ class EnsureBusinessAccess
         );
         $request->attributes->set('current_branch_id', $membership->pivot->branch_id);
 
-        $this->setBranchIfProvided($request, $membership);
+        if ($response = $this->setBranchIfProvided($request, $membership)) {
+            return $response;
+        }
 
         return $next($request);
     }
 
-    private function setBranchIfProvided(Request $request, Business $business): void
+    private function setBranchIfProvided(Request $request, Business $business): ?Response
     {
         $branchId = $request->header('X-Branch-Id') ?? $request->input('branch_id');
 
@@ -99,12 +103,15 @@ class EnsureBusinessAccess
             $branch = $business->branches()->where('id', $branchId)->where('status', 'active')->first();
 
             if (! $branch) {
-                // Do not hard-fail; just ignore invalid branch header
-                return;
+                return response()->json([
+                    'message' => 'The selected branch does not belong to this business or is inactive.',
+                ], 422);
             }
 
             $request->attributes->set('current_branch', $branch);
             $request->attributes->set('current_branch_id', $branch->id);
         }
+
+        return null;
     }
 }

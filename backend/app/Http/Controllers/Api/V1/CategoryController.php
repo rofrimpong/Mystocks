@@ -26,7 +26,7 @@ class CategoryController extends Controller
         }
 
         if ($search = $request->input('search')) {
-            $query->where('name', 'ilike', "%{$search}%");
+            $query->where('name', 'like', "%{$search}%");
         }
 
         $categories = $query->paginate($request->integer('per_page', 50));

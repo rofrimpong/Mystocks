@@ -25,6 +25,7 @@ class SaleController extends Controller
         $query = Sale::query()
             ->where('business_id', $business->id)
             ->with(['customer', 'branch', 'cashier'])
+            ->withCount('items')
             ->orderByDesc('sold_at');
 
         if ($request->filled('branch_id')) {

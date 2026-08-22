@@ -63,6 +63,10 @@ export interface DashboardData {
   stock_value: string;
   low_stock_count: number;
   total_products: number;
+  customer_credit: {
+    outstanding: string;
+    customers: number;
+  };
   business: {
     id: string;
     name: string;
@@ -88,6 +92,8 @@ export interface OfflineOperation {
   id: string;
   idempotency_key: string;
   operation_type: OfflineOperationType;
+  origin_business_id: string;
+  origin_user_id: string;
   payload: Record<string, unknown>;
   client_created_at: string;
   status: 'pending' | 'syncing' | 'synced' | 'conflict' | 'failed';
@@ -123,6 +129,7 @@ export interface Sale {
   tax_amount: string;
   total: string;
   payment_status: string;
+  item_count?: number;
   sold_at?: string | null;
   branch?: {
     id: string;

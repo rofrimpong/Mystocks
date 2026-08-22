@@ -108,6 +108,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/customers', [CustomerController::class, 'store'])->middleware('business.role:manager,cashier,salesperson');
         Route::get('/customers/{id}', [CustomerController::class, 'show'])->middleware('business.role:manager,cashier,salesperson');
         Route::put('/customers/{id}', [CustomerController::class, 'update'])->middleware('business.role:manager,cashier,salesperson');
+        Route::get('/customers/{id}/transactions', [CustomerController::class, 'transactions'])->middleware('business.role:manager,cashier,salesperson');
+        Route::post('/customers/{id}/payments', [CustomerController::class, 'payment'])->middleware('business.role:manager,cashier');
+        Route::post('/customers/{id}/opening-balance', [CustomerController::class, 'openingBalance'])->middleware('business.role:manager');
+        Route::post('/customers/{id}/adjustments', [CustomerController::class, 'adjustment'])->middleware('business.role:manager');
         Route::delete('/customers/{id}', [CustomerController::class, 'destroy'])->middleware('business.role:manager');
 
         Route::get('/suppliers', [SupplierController::class, 'index'])->middleware('business.role:manager,inventory_officer');

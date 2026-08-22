@@ -12,6 +12,20 @@ export interface Customer {
   status: string;
 }
 
+export interface CustomerTransaction {
+  id: string;
+  type: 'sale' | 'payment' | 'credit_note' | 'opening_balance' | 'adjustment';
+  amount: string;
+  balance_after: string;
+  payment_method?: string | null;
+  payment_reference?: string | null;
+  reference_type?: string | null;
+  reference_id?: string | null;
+  notes?: string | null;
+  occurred_at: string;
+  created_by?: { id: string; name: string } | null;
+}
+
 export async function fetchCustomers(params?: {
   search?: string;
   active_only?: boolean;
@@ -49,4 +63,29 @@ export async function updateCustomer(
 ) {
   const { data } = await api.put(`/customers/${id}`, payload);
   return data;
+}
+
+export async function fetchCustomerTransactions(id: string): Promise<{ data: CustomerTransaction[] }> {
+  const { data } = await api.get(`/customers/${id}/transactions`);
+  return data;
+}
+
+export async function recordCustomerPayment(id: string, payload: {
+  amount: number;
+  payment_method: 'cash' | 'mobile_money' | 'card' | 'bank_transfer';
+  reference?: string;
+  notes?: string;
+}): Promise<Customer> {
+  const { data } = await api.post(`/customers/${id}/payments`, payload);
+  return data.data?.customer || data.data || data;
+}
+
+export async function recordOpeningBalance(id: string, payload: { amount: number; notes?: string }): Promise<Customer> {
+  const { data } = await api.post(`/customers/${id}/opening-balance`, payload);
+  return data.data?.customer || data.data || data;
+}
+
+export async function recordCustomerAdjustment(id: string, payload: { direction: 'increase' | 'decrease'; amount: number; notes: string }): Promise<Customer> {
+  const { data } = await api.post(`/customers/${id}/adjustments`, payload);
+  return data.data?.customer || data.data || data;
 }

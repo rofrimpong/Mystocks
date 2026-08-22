@@ -18,6 +18,15 @@ function saveQueue(ops: OfflineOperation[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ops));
 }
 
+function currentUserId(): string | null {
+  try {
+    const storedUser = localStorage.getItem('mystocks_user');
+    return storedUser ? JSON.parse(storedUser)?.id ?? null : null;
+  } catch {
+    return null;
+  }
+}
+
 interface OfflineState {
   queue: OfflineOperation[];
   isOnline: boolean;
@@ -38,10 +47,19 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
   setOnline: (online) => set({ isOnline: online }),
 
   enqueue: (type, payload) => {
+    const businessId = localStorage.getItem('mystocks_business_id');
+    const userId = currentUserId();
+
+    if (!businessId || !userId) {
+      throw new Error('Cannot save an offline operation without an active business and user.');
+    }
+
     const op: OfflineOperation = {
       id: uuidv4(),
       idempotency_key: uuidv4(),
       operation_type: type,
+      origin_business_id: businessId,
+      origin_user_id: userId,
       payload,
       client_created_at: new Date().toISOString(),
       status: 'pending',
@@ -78,7 +96,24 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
     const { queue, isOnline, isSyncing } = get();
     if (!isOnline || isSyncing) return;
 
-    const pending = queue.filter((op) => op.status === 'pending' || op.status === 'failed');
+    const businessId = localStorage.getItem('mystocks_business_id');
+    const userId = currentUserId();
+    const eligible = (op: OfflineOperation) =>
+      op.origin_business_id === businessId && op.origin_user_id === userId;
+    const pending = queue.filter(
+      (op) => (op.status === 'pending' || op.status === 'failed') && eligible(op)
+    );
+    const mismatched = queue.map((op) =>
+      (op.status === 'pending' || op.status === 'failed') && !eligible(op)
+        ? { ...op, status: 'conflict' as const, conflict_reason: 'Operation belongs to a different business or user.' }
+        : op
+    );
+
+    if (mismatched.some((op, index) => op !== queue[index])) {
+      saveQueue(mismatched);
+      set({ queue: mismatched });
+    }
+
     if (pending.length === 0) return;
 
     set({ isSyncing: true });
@@ -92,6 +127,8 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
         operations: pending.map((op) => ({
           idempotency_key: op.idempotency_key,
           operation_type: op.operation_type,
+          origin_business_id: op.origin_business_id,
+          origin_user_id: op.origin_user_id,
           payload: op.payload,
           client_created_at: op.client_created_at,
         })),

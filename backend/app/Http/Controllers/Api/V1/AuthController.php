@@ -91,6 +91,10 @@ class AuthController extends Controller
                     'name' => $result['business']->name,
                     'currency' => $result['business']->currency,
                     'status' => $result['business']->status,
+                    'plan' => $result['business']->plan,
+                    'is_owner' => true,
+                    'role' => 'owner',
+                    'branch_id' => $result['branch']->id,
                     'trial_ends_at' => $result['business']->trial_ends_at?->toIso8601String(),
                 ],
                 'branch' => [

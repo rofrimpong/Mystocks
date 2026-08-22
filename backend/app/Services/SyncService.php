@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\IdempotencyKey;
+use App\Models\Branch;
+use App\Models\Customer;
+use App\Models\Product;
 use App\Models\SyncOperation;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class SyncService
@@ -58,7 +60,9 @@ class SyncService
         $payload = $operation['payload'] ?? [];
 
         // 1. Check existing idempotency key – never create duplicates
-        $existing = IdempotencyKey::where('key', $key)->first();
+        $existing = IdempotencyKey::where('business_id', $businessId)
+            ->where('key', $key)
+            ->first();
 
         if ($existing) {
             if ($existing->status === 'completed') {
@@ -83,21 +87,20 @@ class SyncService
         }
 
         // Record / update sync operation
-        $syncOp = SyncOperation::updateOrCreate(
-            [
-                'business_id' => $businessId,
-                'idempotency_key' => $key,
-            ],
-            [
-                'user_id' => $userId,
-                'device_id' => $deviceId,
-                'operation_type' => $type,
-                'status' => 'pending',
-                'payload' => $payload,
-                'client_created_at' => $operation['client_created_at'] ?? now(),
-                'retry_count' => DB::raw('COALESCE(retry_count, 0) + 1'),
-            ]
-        );
+        $syncOp = SyncOperation::firstOrNew([
+            'business_id' => $businessId,
+            'idempotency_key' => $key,
+        ]);
+        $syncOp->fill([
+            'user_id' => $userId,
+            'device_id' => $deviceId,
+            'operation_type' => $type,
+            'status' => 'pending',
+            'payload' => $payload,
+            'client_created_at' => $operation['client_created_at'] ?? now(),
+            'retry_count' => ((int) $syncOp->retry_count) + 1,
+        ]);
+        $syncOp->save();
 
         try {
             $result = match ($type) {
@@ -133,7 +136,7 @@ class SyncService
             ]);
 
             IdempotencyKey::updateOrCreate(
-                ['key' => $key],
+                ['business_id' => $businessId, 'key' => $key],
                 [
                     'business_id' => $businessId,
                     'operation_type' => $type,
@@ -178,9 +181,24 @@ class SyncService
         string $idempotencyKey,
         array $payload
     ): array {
+        $this->assertBranchBelongsToBusiness($businessId, $payload['branch_id'] ?? null);
+
+        if (! empty($payload['customer_id'])) {
+            $this->assertCustomerBelongsToBusiness($businessId, $payload['customer_id']);
+        }
+
+        foreach ($payload['items'] ?? [] as $index => $item) {
+            $productId = $item['product_id'] ?? null;
+            if (! $productId || ! Product::where('business_id', $businessId)->where('id', $productId)->exists()) {
+                throw ValidationException::withMessages([
+                    "items.{$index}.product_id" => ['Product does not belong to this business.'],
+                ]);
+            }
+        }
+
         // Mark idempotency as processing
         IdempotencyKey::updateOrCreate(
-            ['key' => $idempotencyKey],
+            ['business_id' => $businessId, 'key' => $idempotencyKey],
             [
                 'business_id' => $businessId,
                 'operation_type' => 'sale',
@@ -206,7 +224,7 @@ class SyncService
             'payment' => $payload['payment'] ?? null,
         ]);
 
-        IdempotencyKey::where('key', $idempotencyKey)->update([
+        IdempotencyKey::where('business_id', $businessId)->where('key', $idempotencyKey)->update([
             'status' => 'completed',
             'resource_id' => $sale->id,
             'response_payload' => [
@@ -231,8 +249,11 @@ class SyncService
         string $idempotencyKey,
         array $payload
     ): array {
+        $this->assertBranchBelongsToBusiness($businessId, $payload['branch_id'] ?? null);
+        $this->assertProductBelongsToBusiness($businessId, $payload['product_id'] ?? null);
+
         IdempotencyKey::updateOrCreate(
-            ['key' => $idempotencyKey],
+            ['business_id' => $businessId, 'key' => $idempotencyKey],
             [
                 'business_id' => $businessId,
                 'operation_type' => 'inventory_adjustment',
@@ -253,7 +274,7 @@ class SyncService
             unitCost: $payload['unit_cost'] ?? null
         );
 
-        IdempotencyKey::where('key', $idempotencyKey)->update([
+        IdempotencyKey::where('business_id', $businessId)->where('key', $idempotencyKey)->update([
             'status' => 'completed',
             'resource_id' => $movement->id,
             'response_payload' => ['movement_id' => $movement->id],
@@ -271,8 +292,11 @@ class SyncService
         string $idempotencyKey,
         array $payload
     ): array {
+        $this->assertBranchBelongsToBusiness($businessId, $payload['branch_id'] ?? null);
+        $this->assertProductBelongsToBusiness($businessId, $payload['product_id'] ?? null);
+
         IdempotencyKey::updateOrCreate(
-            ['key' => $idempotencyKey],
+            ['business_id' => $businessId, 'key' => $idempotencyKey],
             [
                 'business_id' => $businessId,
                 'operation_type' => 'opening_stock',
@@ -292,7 +316,7 @@ class SyncService
             reason: $payload['reason'] ?? 'Offline opening stock'
         );
 
-        IdempotencyKey::where('key', $idempotencyKey)->update([
+        IdempotencyKey::where('business_id', $businessId)->where('key', $idempotencyKey)->update([
             'status' => 'completed',
             'resource_id' => $movement->id,
             'response_payload' => ['movement_id' => $movement->id],
@@ -302,5 +326,41 @@ class SyncService
             'resource_id' => $movement->id,
             'movement_id' => $movement->id,
         ];
+    }
+
+    private function assertBranchBelongsToBusiness(string $businessId, mixed $branchId): void
+    {
+        if (! is_string($branchId) || ! Branch::where('business_id', $businessId)
+            ->where('id', $branchId)
+            ->where('status', 'active')
+            ->exists()) {
+            throw ValidationException::withMessages([
+                'branch_id' => ['Branch does not belong to this business or is inactive.'],
+            ]);
+        }
+    }
+
+    private function assertProductBelongsToBusiness(string $businessId, mixed $productId): void
+    {
+        if (! is_string($productId) || ! Product::where('business_id', $businessId)
+            ->where('id', $productId)
+            ->where('is_active', true)
+            ->exists()) {
+            throw ValidationException::withMessages([
+                'product_id' => ['Product does not belong to this business or is inactive.'],
+            ]);
+        }
+    }
+
+    private function assertCustomerBelongsToBusiness(string $businessId, mixed $customerId): void
+    {
+        if (! is_string($customerId) || ! Customer::where('business_id', $businessId)
+            ->where('id', $customerId)
+            ->where('status', 'active')
+            ->exists()) {
+            throw ValidationException::withMessages([
+                'customer_id' => ['Customer does not belong to this business or is inactive.'],
+            ]);
+        }
     }
 }

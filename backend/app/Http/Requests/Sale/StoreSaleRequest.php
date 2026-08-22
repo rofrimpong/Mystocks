@@ -16,7 +16,10 @@ class StoreSaleRequest extends FormRequest
     {
         return [
             'branch_id' => ['nullable', 'uuid', 'exists:branches,id'],
-            'customer_id' => ['nullable', 'uuid', 'exists:customers,id'],
+            'customer_id' => [
+                Rule::requiredIf(fn () => $this->input('payment.method') === 'credit'),
+                'nullable', 'uuid', 'exists:customers,id',
+            ],
             'notes' => ['nullable', 'string', 'max:1000'],
             'sold_at' => ['nullable', 'date'],
             'discount_amount' => ['nullable', 'numeric', 'min:0', 'decimal:0,4'],

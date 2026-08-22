@@ -24,6 +24,10 @@ class SaleResource extends JsonResource
             'cost_of_goods' => (string) $this->cost_of_goods,
             'gross_profit' => (string) $this->gross_profit,
             'payment_status' => $this->payment_status,
+            'item_count' => $this->when(
+                isset($this->items_count) || $this->relationLoaded('items'),
+                fn () => isset($this->items_count) ? (int) $this->items_count : $this->items->count()
+            ),
             'notes' => $this->notes,
             'device_id' => $this->device_id,
             'sold_at' => $this->sold_at?->toIso8601String(),

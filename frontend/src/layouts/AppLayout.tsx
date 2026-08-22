@@ -21,6 +21,7 @@ import {
 import { useAuthStore } from '../stores/authStore';
 import { useOfflineStore } from '../stores/offlineStore';
 import { useEffect, useState } from 'react';
+import TawkSupport from '../components/TawkSupport';
 
 const baseNavItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -117,6 +118,7 @@ export default function AppLayout() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 md:flex-row">
+      <TawkSupport />
       {/* Sidebar - desktop */}
       <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
         <div className="flex h-16 items-center gap-2 border-b border-slate-100 px-5">

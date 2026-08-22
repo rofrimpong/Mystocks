@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\InventoryBalance;
+use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -14,7 +15,8 @@ use Illuminate\Validation\ValidationException;
 class SaleService
 {
     public function __construct(
-        private readonly InventoryService $inventoryService
+        private readonly InventoryService $inventoryService,
+        private readonly CustomerLedgerService $customerLedgerService
     ) {}
 
     /**
@@ -66,6 +68,25 @@ class SaleService
                 throw ValidationException::withMessages([
                     'items' => ['At least one item is required.'],
                 ]);
+            }
+
+            $isCreditSale = ($data['payment']['method'] ?? null) === 'credit';
+            $creditCustomer = null;
+            if ($isCreditSale) {
+                if (empty($data['customer_id'])) {
+                    throw ValidationException::withMessages([
+                        'customer_id' => ['A customer is required for a credit sale.'],
+                    ]);
+                }
+                $creditCustomer = Customer::where('business_id', $data['business_id'])
+                    ->where('id', $data['customer_id'])
+                    ->where('status', 'active')
+                    ->first();
+                if (! $creditCustomer) {
+                    throw ValidationException::withMessages([
+                        'customer_id' => ['Customer not found, inactive, or belongs to another business.'],
+                    ]);
+                }
             }
 
             $subtotal = '0';
@@ -221,6 +242,11 @@ class SaleService
                 if (($data['payment']['method'] ?? null) === 'credit') {
                     $sale->payment_status = 'credit';
                     $sale->save();
+                    $this->customerLedgerService->recordCreditSale(
+                        $creditCustomer,
+                        $sale,
+                        $data['cashier_id']
+                    );
                 } else {
                     $this->recordPayment($sale, $data['payment'], $data['cashier_id']);
                 }
@@ -260,6 +286,7 @@ class SaleService
                     ]);
                 }
             }
+            $this->customerLedgerService->reverseCreditSale($sale, $userId);
             $sale->status = "cancelled";
             $sale->save();
             return $sale->load(["items", "payments", "customer", "branch", "cashier"]);

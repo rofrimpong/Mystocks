@@ -8,11 +8,14 @@ use App\Http\Requests\Customer\UpdateCustomerRequest;
 use App\Http\Resources\CustomerResource;
 use App\Models\Business;
 use App\Models\Customer;
+use App\Services\CustomerLedgerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
+    public function __construct(private readonly CustomerLedgerService $ledgerService) {}
+
     public function index(Request $request): JsonResponse
     {
         /** @var Business $business */
@@ -28,9 +31,9 @@ class CustomerController extends Controller
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                    ->orWhere('phone', 'ilike', "%{$search}%")
-                    ->orWhere('email', 'ilike', "%{$search}%");
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -111,5 +114,86 @@ class CustomerController extends Controller
         return response()->json([
             'message' => 'Customer deleted successfully.',
         ]);
+    }
+
+    public function transactions(Request $request, string $id): JsonResponse
+    {
+        $business = $request->attributes->get('current_business');
+        $customer = Customer::where('business_id', $business->id)->findOrFail($id);
+        $transactions = $customer->transactions()
+            ->with('creator:id,name')
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('created_at')
+            ->paginate(min($request->integer('per_page', 50), 100));
+
+        return response()->json([
+            'data' => $transactions->getCollection()->map(fn ($transaction) => [
+                'id' => $transaction->id,
+                'type' => $transaction->type,
+                'amount' => (string) $transaction->amount,
+                'balance_after' => (string) $transaction->balance_after,
+                'payment_method' => $transaction->payment_method,
+                'payment_reference' => $transaction->payment_reference,
+                'notes' => $transaction->notes,
+                'created_by' => $transaction->creator ? [
+                    'id' => $transaction->creator->id,
+                    'name' => $transaction->creator->name,
+                ] : null,
+                'occurred_at' => $transaction->occurred_at?->toIso8601String(),
+            ]),
+            'meta' => ['total' => $transactions->total()],
+            'customer' => new CustomerResource($customer->fresh()),
+        ]);
+    }
+
+    public function payment(Request $request, string $id): JsonResponse
+    {
+        $business = $request->attributes->get('current_business');
+        $customer = Customer::where('business_id', $business->id)->where('status', 'active')->findOrFail($id);
+        $data = $request->validate([
+            'amount' => ['required', 'numeric', 'gt:0', 'decimal:0,4'],
+            'payment_method' => ['required', 'in:cash,mobile_money,card,bank_transfer,other'],
+            'reference' => ['nullable', 'string', 'max:100'],
+            'notes' => ['nullable', 'string', 'max:500'],
+            'occurred_at' => ['nullable', 'date'],
+        ]);
+        $transaction = $this->ledgerService->recordPayment($customer, $data, $request->user()->id);
+        return response()->json([
+            'message' => 'Customer payment recorded successfully.',
+            'data' => ['transaction_id' => $transaction->id, 'customer' => new CustomerResource($customer->fresh())],
+        ], 201);
+    }
+
+    public function openingBalance(Request $request, string $id): JsonResponse
+    {
+        $business = $request->attributes->get('current_business');
+        $customer = Customer::where('business_id', $business->id)->where('status', 'active')->findOrFail($id);
+        $data = $request->validate([
+            'amount' => ['required', 'numeric', 'gt:0', 'decimal:0,4'],
+            'notes' => ['nullable', 'string', 'max:500'],
+            'occurred_at' => ['nullable', 'date'],
+        ]);
+        $transaction = $this->ledgerService->recordOpeningBalance($customer, $data, $request->user()->id);
+        return response()->json([
+            'message' => 'Opening balance recorded successfully.',
+            'data' => ['transaction_id' => $transaction->id, 'customer' => new CustomerResource($customer->fresh())],
+        ], 201);
+    }
+
+    public function adjustment(Request $request, string $id): JsonResponse
+    {
+        $business = $request->attributes->get('current_business');
+        $customer = Customer::where('business_id', $business->id)->findOrFail($id);
+        $data = $request->validate([
+            'direction' => ['required', 'in:increase,decrease'],
+            'amount' => ['required', 'numeric', 'gt:0', 'decimal:0,4'],
+            'notes' => ['required', 'string', 'max:500'],
+            'occurred_at' => ['nullable', 'date'],
+        ]);
+        $transaction = $this->ledgerService->recordAdjustment($customer, $data, $request->user()->id);
+        return response()->json([
+            'message' => 'Customer balance adjusted successfully.',
+            'data' => ['transaction_id' => $transaction->id, 'customer' => new CustomerResource($customer->fresh())],
+        ], 201);
     }
 }

@@ -13,8 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: 'api/v1',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->api(prepend: [
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
+            'api/v1/*',
         ]);
 
         $middleware->alias([

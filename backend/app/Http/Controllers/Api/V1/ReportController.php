@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\InventoryBalanceResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Business;
+use App\Models\Customer;
 use App\Models\InventoryBalance;
 use App\Models\Product;
 use App\Models\Sale;
@@ -72,6 +73,10 @@ class ReportController extends Controller
             ->count();
 
         $productCount = Product::where('business_id', $business->id)->where('is_active', true)->count();
+        $customerDebt = Customer::where('business_id', $business->id)
+            ->where('outstanding_balance', '>', 0)
+            ->selectRaw('COALESCE(SUM(outstanding_balance), 0) as total, COUNT(*) as customers')
+            ->first();
 
         return response()->json([
             'data' => [
@@ -79,6 +84,10 @@ class ReportController extends Controller
                 'stock_value' => number_format((float) $stockValue, 4, '.', ''),
                 'low_stock_count' => $lowStockCount,
                 'total_products' => $productCount,
+                'customer_credit' => [
+                    'outstanding' => number_format((float) ($customerDebt?->total ?? 0), 4, '.', ''),
+                    'customers' => (int) ($customerDebt?->customers ?? 0),
+                ],
                 'business' => [
                     'id' => $business->id,
                     'name' => $business->name,

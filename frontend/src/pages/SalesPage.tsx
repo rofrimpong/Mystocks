@@ -1,14 +1,49 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Minus, Plus, Search, ShoppingCart, Trash2, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { MessageCircle, Minus, Plus, Search, ShoppingCart, Trash2, X } from 'lucide-react';
 import { fetchProducts, createSale, fetchSales, fetchSale, cancelSale, type CartItem, type CreateSalePayload } from '../services/sales';
 import type { Product, Sale } from '../types';
 import { useOfflineStore } from '../stores/offlineStore';
 import { useAuthStore } from '../stores/authStore';
 import { fetchBalances, type InventoryBalance } from '../services/inventory';
 import { v4 as uuidv4 } from 'uuid';
+import { fetchCustomers, type Customer } from '../services/customers';
 
 function money(n: number) {
   return n.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function whatsAppNumber(phone?: string | null) {
+  const digits = (phone || '').replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('0')) return `233${digits.slice(1)}`;
+  return digits;
+}
+
+function receiptWhatsAppText(sale: Sale, businessName: string) {
+  const cancelled = sale.status === 'cancelled';
+  const lines = (sale.items || []).map((item) =>
+    `${item.product_name} — ${Number(item.quantity).toLocaleString('en-GH', { maximumFractionDigits: 2 })} × GHS ${money(Number(item.unit_selling_price))} = GHS ${money(Number(item.line_total))}`
+  );
+  const paymentMethod = sale.payments?.[0]?.method?.replace('_', ' ') || sale.payment_status;
+
+  return [
+    `*${businessName}*`,
+    '*TRANSACTION RECEIPT*',
+    `Receipt: ${sale.sale_number}`,
+    `Status: ${cancelled ? 'CANCELLED' : 'COMPLETED'}`,
+    `Date: ${sale.sold_at ? new Date(sale.sold_at).toLocaleString('en-GB') : '—'}`,
+    sale.customer ? `Customer: ${sale.customer.name}${sale.customer.phone ? ` (${sale.customer.phone})` : ''}` : '',
+    `Payment: ${paymentMethod}`,
+    '',
+    ...lines,
+    '',
+    `Subtotal: GHS ${money(Number(sale.subtotal))}`,
+    Number(sale.discount_amount) > 0 ? `Discount: GHS ${money(Number(sale.discount_amount))}` : '',
+    Number(sale.tax_amount) > 0 ? `Tax: GHS ${money(Number(sale.tax_amount))}` : '',
+    `Grand total: GHS ${money(Number(sale.total))}`,
+    cancelled ? '*CANCELLED — NO AMOUNT DUE*' : sale.payment_status === 'credit' ? `Balance due: GHS ${money(Number(sale.total))}` : 'Thank you for your business.',
+  ].filter(Boolean).join('\n');
 }
 
 export default function SalesPage() {
@@ -25,6 +60,8 @@ export default function SalesPage() {
   const [view, setView] = useState<'pos' | 'history'>('pos');
   const [salesHistory, setSalesHistory] = useState<Sale[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
 
   const { isOnline, enqueue, syncAll } = useOfflineStore();
   const { businesses, currentBusinessId, currentBusinessRole, isBusinessOwner, user } = useAuthStore();
@@ -54,6 +91,7 @@ export default function SalesPage() {
 
   useEffect(() => {
     loadProducts();
+    fetchCustomers({ active_only: true, per_page: 100 }).then((r) => setCustomers(r.data)).catch(() => undefined);
   }, [loadProducts]);
 
   useEffect(() => {
@@ -104,6 +142,14 @@ export default function SalesPage() {
   );
 
   const cartCount = cart.reduce((n, i) => n + i.quantity, 0);
+  const receiptItemCount = lastSale?.items?.reduce((total, item) => total + Number(item.quantity), 0) || 0;
+  const receiptAmountPaid = lastSale?.payments?.reduce((total, payment) => total + Number(payment.amount), 0) || 0;
+  const receiptBalance = lastSale ? Math.max(Number(lastSale.total) - receiptAmountPaid, 0) : 0;
+  const receiptChange = lastSale ? Math.max(receiptAmountPaid - Number(lastSale.total), 0) : 0;
+  const receiptCancelled = lastSale?.status === 'cancelled';
+  const receiptWhatsAppUrl = lastSale
+    ? `https://wa.me/${whatsAppNumber(lastSale.customer?.phone)}?text=${encodeURIComponent(receiptWhatsAppText(lastSale, currentBusiness?.name || 'CNMG STOCKS'))}`
+    : '';
   const getStock = (p: Product) => Number(balances.find((b) => b.product_id === p.id)?.available_quantity ?? balances.find((b) => b.product_id === p.id)?.quantity ?? 0);
   const isOutOfStock = (p: Product) => p.track_inventory && !p.is_service && getStock(p) <= 0;
 
@@ -154,6 +200,10 @@ export default function SalesPage() {
 
   const completeSale = async () => {
     if (cart.length === 0) return;
+    if (paymentMethod === 'credit' && !selectedCustomerId) {
+      setMessage({ type: 'error', text: 'Select a customer before saving a credit sale.' });
+      return;
+    }
     setSubmitting(true);
     setMessage(null);
 
@@ -178,6 +228,7 @@ export default function SalesPage() {
             },
       idempotency_key: uuidv4(),
       device_id: deviceId,
+      customer_id: paymentMethod === 'credit' ? selectedCustomerId : undefined,
     };
 
     try {
@@ -188,6 +239,7 @@ export default function SalesPage() {
           text: 'Sale saved offline. It will sync when you are back online.',
         });
         setCart([]);
+        setSelectedCustomerId('');
         setShowCart(false);
         return;
       }
@@ -196,6 +248,7 @@ export default function SalesPage() {
       setLastSale(sale);
       setMessage({ type: 'success', text: `Sale completed · ${sale.sale_number} · GHS ${money(subtotal)}` });
       setCart([]);
+      setSelectedCustomerId('');
       setShowCart(false);
       // Opportunistic sync of any pending offline ops
       syncAll();
@@ -219,6 +272,7 @@ export default function SalesPage() {
           text: 'Network issue — sale saved offline and will sync later.',
         });
         setCart([]);
+        setSelectedCustomerId('');
         setShowCart(false);
       } else {
         setMessage({
@@ -276,7 +330,7 @@ export default function SalesPage() {
           </div>
         )}
 
-        {view === 'history' && <div className="space-y-3">{historyLoading ? <div className="py-12 text-center text-slate-500">Loading sales history…</div> : salesHistory.length === 0 ? <div className="rounded-xl bg-white py-12 text-center text-slate-500 shadow-sm">No sales recorded yet.</div> : <div className="overflow-hidden rounded-xl bg-white shadow-sm"><div className="divide-y divide-slate-100">{salesHistory.map(sale => <div key={sale.id} className="flex items-center gap-3 p-4"><div className="min-w-0 flex-1"><div className="font-semibold text-slate-900">{sale.sale_number}</div><div className="mt-1 text-xs text-slate-500">{sale.sold_at ? new Date(sale.sold_at).toLocaleString('en-GB') : '—'}</div><div className="mt-1 text-xs capitalize text-slate-500">{sale.cashier?.name || '—'} · {sale.payment_status}</div></div><div className="text-right"><div className="font-bold">GHS {money(Number(sale.total))}</div><button type="button" onClick={() => openSaleFromHistory(sale.id)} className="mt-2 rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700">View</button></div></div>)}</div></div>}</div>}
+        {view === 'history' && <div className="space-y-3">{historyLoading ? <div className="py-12 text-center text-slate-500">Loading sales history…</div> : salesHistory.length === 0 ? <div className="rounded-xl bg-white py-12 text-center text-slate-500 shadow-sm">No sales recorded yet.</div> : <div className="overflow-hidden rounded-xl bg-white shadow-sm"><div className="divide-y divide-slate-100">{salesHistory.map(sale => <div key={sale.id} className="flex items-center gap-3 p-4"><div className="min-w-0 flex-1"><div className="font-semibold text-slate-900">{sale.sale_number}</div><div className="mt-1 text-xs text-slate-500">{sale.sold_at ? new Date(sale.sold_at).toLocaleString('en-GB') : '—'}</div><div className={`mt-1 text-xs capitalize ${sale.status === 'cancelled' ? 'font-bold text-red-600' : 'text-slate-500'}`}>{sale.cashier?.name || '—'} · {sale.status === 'cancelled' ? 'Cancelled' : sale.payment_status} · {sale.item_count ?? 0} product line{sale.item_count === 1 ? '' : 's'}</div></div><div className="text-right"><div className={`font-bold ${sale.status === 'cancelled' ? 'text-slate-400 line-through' : ''}`}>GHS {money(Number(sale.total))}</div><button type="button" onClick={() => openSaleFromHistory(sale.id)} className="mt-2 rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700">View receipt</button></div></div>)}</div></div>}</div>}
         {view === 'pos' && (loading ? (
           <div className="py-16 text-center text-slate-500">Loading products…</div>
         ) : products.length === 0 ? (
@@ -396,9 +450,26 @@ export default function SalesPage() {
             ))}
           </div>
 
+          {paymentMethod === 'credit' && (
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-slate-600">Customer *</label>
+              <select
+                value={selectedCustomerId}
+                onChange={(e) => setSelectedCustomerId(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-teal-600"
+              >
+                <option value="">Select customer</option>
+                {customers.filter((c) => c.status === 'active').map((c) => (
+                  <option key={c.id} value={c.id}>{c.name} · owes GHS {money(Number(c.outstanding_balance || 0))}</option>
+                ))}
+              </select>
+              {customers.length === 0 && <p className="mt-1 text-xs text-amber-700">Add an active customer before making a credit sale.</p>}
+            </div>
+          )}
+
           <button
             onClick={completeSale}
-            disabled={cart.length === 0 || submitting}
+            disabled={cart.length === 0 || submitting || (paymentMethod === 'credit' && !selectedCustomerId)}
             className="w-full rounded-xl bg-teal-700 py-3.5 text-sm font-bold text-white transition hover:bg-teal-800 disabled:opacity-50"
           >
             {submitting
@@ -410,18 +481,25 @@ export default function SalesPage() {
         </div>
       </div>
 
-      <style>{`@media print { body > * { display: none !important; } #root { display: block !important; } #root > * { display: none !important; } .receipt-print { display: block !important; position: fixed !important; inset: 0 auto auto 0 !important; width: 100% !important; max-width: none !important; margin: 0 !important; padding: 12mm !important; box-shadow: none !important; border-radius: 0 !important; background: white !important; } .receipt-actions { display: none !important; } @page { size: auto; margin: 0; } }`}</style>
-      {lastSale && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 p-4 pb-24 sm:flex sm:items-center sm:justify-center sm:pb-4">
+      <style>{`@media print { body > *:not(.receipt-print-portal) { display: none !important; } .receipt-print-portal { position: static !important; inset: auto !important; overflow: visible !important; background: white !important; padding: 0 !important; } .receipt-print { display: block !important; position: static !important; width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border-radius: 0 !important; background: white !important; break-inside: avoid !important; } .receipt-actions { display: none !important; } @page { size: auto; margin: 8mm; } }`}</style>
+      {lastSale && createPortal((
+        <div className="receipt-print-portal fixed inset-0 z-50 overflow-y-auto bg-black/40 p-4 pb-24 sm:flex sm:items-center sm:justify-center sm:pb-4">
           <div className="receipt-print mx-auto w-full max-w-md rounded-2xl bg-white p-5 pb-8 shadow-xl sm:my-auto">
             <div className="text-center">
-              <div className="text-lg font-bold text-slate-900">Sale completed</div>
+              <div className="text-lg font-bold text-slate-900">{currentBusiness?.name || 'CNMG STOCKS'}</div>
+              <div className="mt-1 text-sm font-semibold uppercase tracking-wide text-slate-600">Transaction receipt</div>
               <div className="mt-1 text-sm font-medium text-teal-700">
                 {lastSale.sale_number}
               </div>
             </div>
 
             <div className="mt-5 space-y-2 rounded-xl bg-slate-50 p-4 text-sm">
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Status</span>
+                <span className={`font-bold uppercase ${receiptCancelled ? 'text-red-600' : 'text-emerald-700'}`}>
+                  {receiptCancelled ? 'Cancelled' : 'Completed'}
+                </span>
+              </div>
               <div className="flex justify-between gap-3">
                 <span className="text-slate-500">Date</span>
                 <span className="text-right font-medium">
@@ -448,8 +526,22 @@ export default function SalesPage() {
               <div className="flex justify-between gap-3">
                 <span className="text-slate-500">Payment</span>
                 <span className="font-semibold capitalize">
-                  {lastSale.payment_status}
+                  {lastSale.payments?.[0]?.method?.replace('_', ' ') || lastSale.payment_status}
                 </span>
+              </div>
+
+              {lastSale.customer && (
+                <div className="flex justify-between gap-3">
+                  <span className="text-slate-500">Customer</span>
+                  <span className="text-right font-medium">
+                    {lastSale.customer.name}{lastSale.customer.phone ? ` · ${lastSale.customer.phone}` : ''}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Items</span>
+                <span className="font-medium">{receiptItemCount}</span>
               </div>
             </div>
 
@@ -479,16 +571,26 @@ export default function SalesPage() {
               ))}
             </div>
 
-            <div className="mt-4 border-t pt-4">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-700">Total</span>
+            <div className="mt-4 space-y-2 border-t pt-4 text-sm">
+              <div className="flex items-center justify-between text-slate-600">
+                <span>Subtotal</span>
+                <span>GHS {money(Number(lastSale.subtotal))}</span>
+              </div>
+              {Number(lastSale.discount_amount) > 0 && <div className="flex items-center justify-between text-slate-600"><span>Discount</span><span>- GHS {money(Number(lastSale.discount_amount))}</span></div>}
+              {Number(lastSale.tax_amount) > 0 && <div className="flex items-center justify-between text-slate-600"><span>Tax</span><span>GHS {money(Number(lastSale.tax_amount))}</span></div>}
+              <div className="flex items-center justify-between border-t pt-2">
+                <span className="font-semibold text-slate-700">Grand total</span>
                 <span className="text-xl font-bold text-teal-800">
                   GHS {money(Number(lastSale.total))}
                 </span>
               </div>
+              {!receiptCancelled && lastSale.payment_status !== 'credit' && <div className="flex items-center justify-between text-slate-600"><span>Amount paid</span><span>GHS {money(receiptAmountPaid)}</span></div>}
+              {!receiptCancelled && receiptBalance > 0 && <div className="flex items-center justify-between font-semibold text-amber-700"><span>Balance due</span><span>GHS {money(receiptBalance)}</span></div>}
+              {!receiptCancelled && receiptChange > 0 && <div className="flex items-center justify-between text-slate-600"><span>Change</span><span>GHS {money(receiptChange)}</span></div>}
+              {receiptCancelled && <div className="rounded-lg bg-red-50 px-3 py-2 text-center font-bold text-red-700">CANCELLED — NO AMOUNT DUE</div>}
             </div>
 
-            <div className="receipt-actions mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <div className="receipt-actions mt-5 grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setLastSale(null)}
@@ -504,11 +606,20 @@ export default function SalesPage() {
               >
                 Print Receipt
               </button>
+              <a
+                href={receiptWhatsAppUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="col-span-2 flex items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2.5 font-semibold text-white"
+              >
+                <MessageCircle className="h-5 w-5" />
+                Share receipt on WhatsApp
+              </a>
               {canCancelSales && lastSale.status === 'completed' && <button type="button" onClick={() => handleCancelSale(lastSale)} className="col-span-2 rounded-lg bg-red-600 py-2.5 font-semibold text-white sm:col-span-1">Cancel Sale</button>}
             </div>
           </div>
         </div>
-      )}
+      ), document.body)}
 
       {/* Mobile cart backdrop */}
       {showCart && (
