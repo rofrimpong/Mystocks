@@ -9,6 +9,7 @@ import {
   Truck,
   Receipt,
   BarChart3,
+  Gift,
   Settings,
   UserCircle,
   ShieldCheck,
@@ -33,6 +34,7 @@ const baseNavItems = [
   { to: '/suppliers', icon: Truck, label: 'Suppliers' },
   { to: '/expenses', icon: Receipt, label: 'Expenses' },
   { to: '/reports', icon: BarChart3, label: 'Reports' },
+  { to: '/referrals', icon: Gift, label: 'Refer & Earn' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
@@ -55,6 +57,7 @@ export default function AppLayout() {
       '/suppliers',
       '/expenses',
       '/reports',
+      '/referrals',
       '/settings',
     ],
     cashier: [
@@ -63,6 +66,7 @@ export default function AppLayout() {
       '/products',
       '/inventory',
       '/customers',
+      '/referrals',
       '/settings',
     ],
     salesperson: [
@@ -71,6 +75,7 @@ export default function AppLayout() {
       '/products',
       '/inventory',
       '/customers',
+      '/referrals',
       '/settings',
     ],
     inventory_officer: [
@@ -78,6 +83,7 @@ export default function AppLayout() {
       '/products',
       '/inventory',
       '/suppliers',
+      '/referrals',
       '/settings',
     ],
   };

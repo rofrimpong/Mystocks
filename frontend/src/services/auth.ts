@@ -17,6 +17,7 @@ export async function register(payload: {
   password_confirmation: string;
   business_name: string;
   phone?: string;
+  referral_code?: string;
   device_name?: string;
 }) {
   const { data } = await api.post<AuthResponse>('/auth/register', payload);

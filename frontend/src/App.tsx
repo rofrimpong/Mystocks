@@ -12,6 +12,7 @@ import CustomersPage from './pages/CustomersPage';
 import SuppliersPage from './pages/SuppliersPage';
 import ExpensesPage from './pages/ExpensesPage';
 import ReportsPage from './pages/ReportsPage';
+import ReferralsPage from './pages/ReferralsPage';
 import SettingsPage from './pages/SettingsPage';
 import ProfilePage from './pages/ProfilePage';
 import StaffPage from './pages/StaffPage';
@@ -66,6 +67,7 @@ export default function App() {
         <Route path="suppliers" element={<SuppliersPage />} />
         <Route path="expenses" element={<ExpensesPage />} />
         <Route path="reports" element={<ReportsPage />} />
+        <Route path="referrals" element={<ReferralsPage />} />
         <Route path="staff" element={<StaffPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="plans-billing" element={<PlansBillingPage />} />

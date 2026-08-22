@@ -11,6 +11,7 @@ use App\Http\Resources\UserResource;
 use App\Models\Branch;
 use App\Models\Business;
 use App\Models\User;
+use App\Services\ReferralService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
@@ -31,7 +32,9 @@ class AuthController extends Controller
     {
         $data = $request->validated();
 
-        $result = DB::transaction(function () use ($data) {
+        $referralService = app(ReferralService::class);
+
+        $result = DB::transaction(function () use ($data, $referralService) {
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
@@ -40,6 +43,16 @@ class AuthController extends Controller
                 'locale' => $data['locale'] ?? 'en',
                 'timezone' => $data['timezone'] ?? 'Africa/Accra',
             ]);
+
+            $referralService->ensureUserHasCode($user);
+
+            if (! empty($data['referral_code'])) {
+                $referrer = $referralService->findReferrer($data['referral_code']);
+
+                if ($referrer) {
+                    $referralService->createReferral($referrer, $user);
+                }
+            }
 
             $business = Business::create([
                 'name' => $data['business_name'],

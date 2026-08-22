@@ -3,6 +3,7 @@ export interface User {
   name: string;
   email: string;
   phone?: string | null;
+  referral_code?: string | null;
   is_platform_admin: boolean;
   is_active: boolean;
   locale: string;
@@ -143,6 +144,7 @@ export interface Sale {
     id: string;
     name: string;
     phone?: string | null;
+  referral_code?: string | null;
   };
   items?: SaleItem[];
   payments?: SalePayment[];

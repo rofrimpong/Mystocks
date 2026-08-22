@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -20,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+        'referral_code',
         'password',
         'is_platform_admin',
         'is_active',
@@ -56,6 +58,16 @@ class User extends Authenticatable
     public function ownedBusinesses(): BelongsToMany
     {
         return $this->businesses()->wherePivot('is_owner', true);
+    }
+
+    public function referralsMade(): HasMany
+    {
+        return $this->hasMany(Referral::class, 'referrer_id');
+    }
+
+    public function referralReceived(): HasOne
+    {
+        return $this->hasOne(Referral::class, 'referred_user_id');
     }
 
     public function isPlatformAdmin(): bool

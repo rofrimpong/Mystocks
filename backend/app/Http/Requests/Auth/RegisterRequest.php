@@ -12,6 +12,15 @@ class RegisterRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('referral_code')) {
+            $this->merge([
+                'referral_code' => strtoupper(trim((string) $this->input('referral_code'))),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -27,6 +36,7 @@ class RegisterRequest extends FormRequest
             'currency' => ['nullable', 'string', 'size:3'],
             'timezone' => ['nullable', 'string', 'max:50'],
             'locale' => ['nullable', 'string', 'max:10'],
+            'referral_code' => ['nullable', 'string', 'max:20', 'exists:users,referral_code'],
             'device_name' => ['nullable', 'string', 'max:100'],
         ];
     }
